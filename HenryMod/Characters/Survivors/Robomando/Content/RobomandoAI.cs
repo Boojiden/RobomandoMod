@@ -15,42 +15,42 @@ namespace RobomandoMod.Survivors.Robomando
             baseAI.aimVectorMaxSpeed = 360;
 
             //mouse over these fields for tooltips
-            AISkillDriver swingDriver = master.AddComponent<AISkillDriver>();
+            AISkillDriver shotDriver = master.AddComponent<AISkillDriver>();
             //Selection Conditions
-            swingDriver.customName = "Use Primary Swing";
-            swingDriver.skillSlot = SkillSlot.Primary;
-            swingDriver.requiredSkill = null; //usually used when you have skills that override other skillslots like engi harpoons
-            swingDriver.requireSkillReady = false; //usually false for primaries
-            swingDriver.requireEquipmentReady = false;
-            swingDriver.minUserHealthFraction = float.NegativeInfinity;
-            swingDriver.maxUserHealthFraction = float.PositiveInfinity;
-            swingDriver.minTargetHealthFraction = float.NegativeInfinity;
-            swingDriver.maxTargetHealthFraction = float.PositiveInfinity;
-            swingDriver.minDistance = 0;
-            swingDriver.maxDistance = 8;
-            swingDriver.selectionRequiresTargetLoS = false;
-            swingDriver.selectionRequiresOnGround = false;
-            swingDriver.selectionRequiresAimTarget = false;
-            swingDriver.maxTimesSelected = -1;
+            shotDriver.customName = "Use Primary Shot";
+            shotDriver.skillSlot = SkillSlot.Primary;
+            shotDriver.requiredSkill = null; //usually used when you have skills that override other skillslots like engi harpoons
+            shotDriver.requireSkillReady = false; //usually false for primaries
+            shotDriver.requireEquipmentReady = false;
+            shotDriver.minUserHealthFraction = float.NegativeInfinity;
+            shotDriver.maxUserHealthFraction = float.PositiveInfinity;
+            shotDriver.minTargetHealthFraction = float.NegativeInfinity;
+            shotDriver.maxTargetHealthFraction = float.PositiveInfinity;
+            shotDriver.minDistance = 0;
+            shotDriver.maxDistance = 256;
+            shotDriver.selectionRequiresTargetLoS = true;
+            shotDriver.selectionRequiresOnGround = false;
+            shotDriver.selectionRequiresAimTarget = false;
+            shotDriver.maxTimesSelected = -1;
 
             //Behavior
-            swingDriver.moveTargetType = AISkillDriver.TargetType.CurrentEnemy;
-            swingDriver.activationRequiresTargetLoS = false;
-            swingDriver.activationRequiresAimTargetLoS = false;
-            swingDriver.activationRequiresAimConfirmation = false;
-            swingDriver.movementType = AISkillDriver.MovementType.ChaseMoveTarget;
-            swingDriver.moveInputScale = 1;
-            swingDriver.aimType = AISkillDriver.AimType.AtMoveTarget;
-            swingDriver.ignoreNodeGraph = false; //will chase relentlessly but be kind of stupid
-            swingDriver.shouldSprint = false; 
-            swingDriver.shouldFireEquipment = false;
-            swingDriver.buttonPressType = AISkillDriver.ButtonPressType.Hold; 
+            shotDriver.moveTargetType = AISkillDriver.TargetType.CurrentEnemy;
+            shotDriver.activationRequiresTargetLoS = false;
+            shotDriver.activationRequiresAimTargetLoS = false;
+            shotDriver.activationRequiresAimConfirmation = false;
+            shotDriver.movementType = AISkillDriver.MovementType.ChaseMoveTarget;
+            shotDriver.moveInputScale = 1;
+            shotDriver.aimType = AISkillDriver.AimType.AtMoveTarget;
+            shotDriver.ignoreNodeGraph = false; //will chase relentlessly but be kind of stupid
+            shotDriver.shouldSprint = false; 
+            shotDriver.shouldFireEquipment = false;
+            shotDriver.buttonPressType = AISkillDriver.ButtonPressType.Hold; 
 
             //Transition Behavior
-            swingDriver.driverUpdateTimerOverride = -1;
-            swingDriver.resetCurrentEnemyOnNextDriverSelection = false;
-            swingDriver.noRepeat = false;
-            swingDriver.nextHighPriorityOverride = null;
+            shotDriver.driverUpdateTimerOverride = -1;
+            shotDriver.resetCurrentEnemyOnNextDriverSelection = false;
+            shotDriver.noRepeat = false;
+            shotDriver.nextHighPriorityOverride = null;
 
             //some fields omitted that aren't commonly changed. will be set to default values
             AISkillDriver shootDriver = master.AddComponent<AISkillDriver>();

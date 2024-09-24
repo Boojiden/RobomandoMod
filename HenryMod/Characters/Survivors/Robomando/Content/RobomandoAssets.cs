@@ -24,7 +24,7 @@ namespace RobomandoMod.Survivors.Robomando
 
         public static void Init(AssetBundle assetBundle)
         {
-
+            /*
             _assetBundle = assetBundle;
 
             swordHitSoundEvent = Content.CreateAndAddNetworkSoundEventDef("RobomandoSwordHit");
@@ -32,6 +32,7 @@ namespace RobomandoMod.Survivors.Robomando
             CreateEffects();
 
             CreateProjectiles();
+            */
         }
 
         #region effects

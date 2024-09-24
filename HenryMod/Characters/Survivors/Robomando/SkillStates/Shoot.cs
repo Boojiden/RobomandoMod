@@ -14,7 +14,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
         public static float baseDuration = 0.3f;
         //delay on firing is usually ass-feeling. only set this if you know what you're doing
         public static float firePercentTime = 0.0f;
-        public static float force = 800f;
+        public static float force = 100f;
         public static float recoil = 1.2f;
         public static float range = 256f;
         public static GameObject tracerEffectPrefab = LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/Tracers/TracerGoldGat");

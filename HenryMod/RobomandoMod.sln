@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.33920.266
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HenryMod", "HenryMod.csproj", "{685EAC6F-14E3-4439-9394-3345F1CBD1AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RobomandoMod", "RobomandoMod.csproj", "{685EAC6F-14E3-4439-9394-3345F1CBD1AD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

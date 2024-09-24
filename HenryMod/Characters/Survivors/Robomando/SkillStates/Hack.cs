@@ -71,7 +71,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 PlayAnimation(4f);
                 playedOnClient = true;
             }
-            if (animShouldPlay && fixedAge > soundDuration && !playedSound) 
+            if (animShouldPlay && fixedAge > soundDuration && !playedSound && isAuthority) 
             {
                 Util.PlaySound("Tazer", gameObject);
                 playedSound = true;
@@ -111,6 +111,16 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             {
                 PlayAnimation("FullBody, Override", "Hack", "ShootGun.playbackRate", 4f);
             }
+        }
+
+        public override void OnSerialize(NetworkWriter writer)
+        {
+            writer.Write(animShouldPlay);
+        }
+
+        public override void OnDeserialize(NetworkReader reader)
+        {
+            animShouldPlay = reader.ReadBoolean();
         }
     }
 

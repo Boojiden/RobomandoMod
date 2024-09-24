@@ -52,6 +52,9 @@ namespace RobomandoMod.Survivors.Robomando
             armor = 0f,
             moveSpeed = 8.2f,
             jumpCount = 1,
+            damage = 15,
+
+            damageGrowth = 3
         };
 
         public override CustomRendererInfo[] customRendererInfos => new CustomRendererInfo[]
@@ -476,7 +479,11 @@ namespace RobomandoMod.Survivors.Robomando
             if (report.victimBody.baseNameToken.Equals("ROB_ROBOMANDO_NAME"))
             {
                 Util.PlaySound("LegoDeathSound", report.victimBody.gameObject);
-                Util.PlaySound("DeathVoice", report.victimBody.gameObject);
+                if (!RobomandoConfig.ShutHimUp.Value)
+                {
+                    Util.PlaySound("DeathVoice", report.victimBody.gameObject);
+                }
+                    
             }
         }
 

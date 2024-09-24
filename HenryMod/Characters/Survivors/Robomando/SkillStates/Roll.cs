@@ -103,7 +103,10 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 {
                     PlayAnimation("FullBody, Override", "RollCrash", "Roll.playbackRate", crashDuration);
                     Util.PlaySound("GroundHit", gameObject);
-                    Util.PlaySound("GroundHitVoice", gameObject);
+                    if (!RobomandoConfig.ShutHimUp.Value)
+                    {
+                        Util.PlaySound("GroundHitVoice", gameObject);
+                    }
                     characterMotor.velocity = Vector3.zero;
                 }
                 canLeave = true;
