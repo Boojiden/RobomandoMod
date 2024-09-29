@@ -1,7 +1,7 @@
 {
   "name": "RobomandoMod",
   "authorName": "RatManRealistic",
-  "version_number": "1.0.3",
+  "version_number": "1.0.4",
   "displayName": "Robomando Mod",
   "description": "This mod adds everyone's least favorite survivor from Risk of Rain Returns, in all of his stupid glory. He's not a good survivor, but that's the point.",
   "website_url": "https://github.com/Boojiden/RobomandoMod",
@@ -12,6 +12,7 @@
     "RiskofThunder-R2API_RecalculateStats-1.0.0",
     "RiskofThunder-R2API_Language-1.0.1",
     "RiskofThunder-R2API_Sound-1.0.2",
-    "RiskofThunder-R2API_Networking-1.0.2"
+    "RiskofThunder-R2API_Networking-1.0.2",
+    "Rune580-Risk_Of_Options-2.8.2"
   ]
 }

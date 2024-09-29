@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using static R2API.LanguageAPI;
 
 namespace RobomandoMod.Modules {
     internal static class Language
@@ -11,6 +12,8 @@ namespace RobomandoMod.Modules {
         public static bool usingLanguageFolder = false;
 
         public static bool printingEnabled = false;
+
+        public static Dictionary<string, LanguageOverlay> overlays = new Dictionary<string, LanguageAPI.LanguageOverlay>();
 
         public static void Init() {
             if (usingLanguageFolder) {
@@ -22,6 +25,29 @@ namespace RobomandoMod.Modules {
             string path = Path.Combine(Path.GetDirectoryName(RobomandoPlugin.instance.Info.Location), "Language");
             if (Directory.Exists(path)) {
                 obj.Add(path);
+            }
+        }
+
+        public static void SetTemporaryValue(string token, string value)
+        {
+            LanguageOverlay overlay;
+            if(overlays.TryGetValue(token, out overlay))
+            {
+                overlay.Remove();
+                overlays[token] = null;
+            }
+            overlays[token] = LanguageAPI.AddOverlay(token, value);
+            
+            //overlays.Add(LanguageAPI.AddOverlay(token, value));
+        }
+
+        public static void RemoveOverlay(string token)
+        {
+            LanguageOverlay overlay;
+            if (overlays.TryGetValue(token, out overlay))
+            {
+                overlay.Remove();
+                overlays[token] = null;
             }
         }
 

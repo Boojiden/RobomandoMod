@@ -1,5 +1,7 @@
 ﻿using BepInEx.Configuration;
 using HenryMod.Characters.Survivors.Robomando.Content;
+using RiskOfOptions;
+using RobomandoMod.Characters.Survivors.Robomando.Components;
 using RobomandoMod.Modules;
 using RobomandoMod.Modules.Characters;
 using RobomandoMod.Survivors.Robomando.Components;
@@ -67,6 +69,26 @@ namespace RobomandoMod.Survivors.Robomando
                 {
                     childName = "Gun",
                     material = assetBundle.LoadMaterial("GunMaterial"),
+                },
+                new CustomRendererInfo
+                {
+                    childName = "Crown",
+                    ignoreOverlays = true,
+                },
+                new CustomRendererInfo
+                {
+                    childName = "Hat",
+                    ignoreOverlays = true,
+                },
+                new CustomRendererInfo
+                {
+                    childName = "TrueCrown",
+                    ignoreOverlays = true,
+                },
+                new CustomRendererInfo
+                {
+                    childName = "Cape",
+                    ignoreOverlays = true,
                 }
         };
 
@@ -91,6 +113,8 @@ namespace RobomandoMod.Survivors.Robomando
             //if (!characterEnabled.Value)
             //    return;
             base.Initialize();
+            ModSettingsManager.SetModIcon(assetBundle.LoadAsset<Sprite>("texRobomandoModIcon"));
+            ModSettingsManager.SetModDescription("robo man doe");
         }
 
         public override void InitializeCharacter()
@@ -129,6 +153,8 @@ namespace RobomandoMod.Survivors.Robomando
         {
             AddHitboxes();
             bodyPrefab.AddComponent<RobomandoWeaponComponent>();
+            Log.Debug("Adding HackIndicator");
+            bodyPrefab.AddComponent<HackIndicatorScan>().Init();
             //bodyPrefab.AddComponent<HuntressTrackerComopnent>();
             //anything else here
         }
@@ -258,12 +284,12 @@ namespace RobomandoMod.Survivors.Robomando
                 skillNameToken = HENRY_PREFIX + "SECONDARY_ZAP_NAME",
                 skillDescriptionToken = HENRY_PREFIX + "SECONDARY_ZAP_DESCRIPTION",
                 skillIcon = assetBundle.LoadAsset<Sprite>("texZapIcon"),
-
+                keywordTokens = new string[] { "KEYWORD_AGILE", "KEYWORD_STUNNING" },
                 activationState = new EntityStates.SerializableEntityStateType(typeof(SkillStates.Zap)),
                 activationStateMachineName = "Weapon",
                 interruptPriority = EntityStates.InterruptPriority.Skill,
 
-                baseRechargeInterval = 2f,
+                baseRechargeInterval = RobomandoStaticValues.zapCooldown,
                 baseMaxStock = 1,
 
                 rechargeStock = 1,
@@ -302,7 +328,7 @@ namespace RobomandoMod.Survivors.Robomando
                 activationStateMachineName = "Body",
                 interruptPriority = EntityStates.InterruptPriority.PrioritySkill,
 
-                baseRechargeInterval = 4f,
+                baseRechargeInterval = RobomandoStaticValues.diveCooldown,
                 baseMaxStock = 1,
 
                 rechargeStock = 1,
@@ -334,6 +360,7 @@ namespace RobomandoMod.Survivors.Robomando
                 skillName = "RobomandoHack",
                 skillNameToken = HENRY_PREFIX + "SPECIAL_HACK_NAME",
                 skillDescriptionToken = HENRY_PREFIX + "SPECIAL_HACK_DESCRIPTION",
+                keywordTokens = new string[] { survivorTokenPrefix + "KEYWORD_JURY_RIG" },
                 skillIcon = assetBundle.LoadAsset<Sprite>("texHackIcon"),
 
                 activationState = new EntityStates.SerializableEntityStateType(typeof(SkillStates.Hack)),
@@ -341,10 +368,10 @@ namespace RobomandoMod.Survivors.Robomando
                 activationStateMachineName = "Body", interruptPriority = EntityStates.InterruptPriority.Skill,
 
                 baseMaxStock = 1,
-                baseRechargeInterval = 10f,
+                baseRechargeInterval = 8f,
                 beginSkillCooldownOnSkillEnd = true,
                 mustKeyPress = false,
-            });
+            }) ;
 
             Skills.AddSpecialSkills(bodyPrefab, specialSkillDef1);
         }
@@ -378,6 +405,7 @@ namespace RobomandoMod.Survivors.Robomando
 
             //add new skindef to our list of skindefs. this is what we'll be passing to the SkinController
             skins.Add(defaultSkin);
+
             SkinDef commandoSkin = Skins.CreateSkinDef(HENRY_PREFIX + "COMMANDO_SKIN_NAME",
                 assetBundle.LoadAsset<Sprite>("texCommandoSkin"),
                 defaultRendererinfos,
@@ -385,7 +413,9 @@ namespace RobomandoMod.Survivors.Robomando
             commandoSkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoCommandoMat");
             //commandoSkin.rendererInfos[1].defaultMaterial = assetBundle.LoadMaterial("RobomandoCommandoMat");
             //commandoSkin.rendererInfos[2].defaultMaterial = assetBundle.LoadMaterial("RobomandoCommandoMat");
-            skins.Add(commandoSkin);
+            if(RobomandoConfig.EnableCommandoSkin.Value)
+                skins.Add(commandoSkin);
+
             SkinDef BlueSkin = Skins.CreateSkinDef(HENRY_PREFIX + "BLUE_SKIN_NAME",
                 assetBundle.LoadAsset<Sprite>("texBlueSkin"),
                 defaultRendererinfos,
@@ -393,7 +423,8 @@ namespace RobomandoMod.Survivors.Robomando
             BlueSkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoBlueMat");
             //BlueSkin.rendererInfos[1].defaultMaterial = assetBundle.LoadMaterial("RobomandoBlueMat");
             //BlueSkin.rendererInfos[2].defaultMaterial = assetBundle.LoadMaterial("RobomandoBlueMat");
-            skins.Add(BlueSkin);
+            if (RobomandoConfig.EnableBlueSkin.Value)
+                skins.Add(BlueSkin);
             SkinDef GreenSkin = Skins.CreateSkinDef(HENRY_PREFIX + "GREEN_SKIN_NAME",
                 assetBundle.LoadAsset<Sprite>("texGreenSkin"),
                 defaultRendererinfos,
@@ -401,7 +432,9 @@ namespace RobomandoMod.Survivors.Robomando
             GreenSkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoGreenMat");
             //GreenSkin.rendererInfos[1].defaultMaterial = assetBundle.LoadMaterial("RobomandoGreenMat");
             //GreenSkin.rendererInfos[2].defaultMaterial = assetBundle.LoadMaterial("RobomandoGreenMat");
-            skins.Add(GreenSkin);
+            if (RobomandoConfig.EnableGreenSkin.Value)
+                skins.Add(GreenSkin);
+
             SkinDef masterySkin = Modules.Skins.CreateSkinDef(HENRY_PREFIX + "MASTERY_SKIN_NAME",
                 assetBundle.LoadAsset<Sprite>("texProvidenceSkin"),
                 defaultRendererinfos,
@@ -409,8 +442,32 @@ namespace RobomandoMod.Survivors.Robomando
                 RobomandoUnlockables.masterySkinUnlockableDef);
             masterySkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoProvidenceMat");
             //masterySkin.rendererInfos[1].defaultMaterial = assetBundle.LoadMaterial("RobomandoProvidenceMat");
-            //masterySkin.rendererInfos[2].defaultMaterial = assetBundle.LoadMaterial("RobomandoProvidenceMat");
-            skins.Add(masterySkin);
+            masterySkin.rendererInfos[2].defaultMaterial = assetBundle.LoadMaterial("CrownShow");
+            if (RobomandoConfig.EnableMasterySkin.Value)
+                skins.Add(masterySkin);
+
+            SkinDef grandMasterySkin = Modules.Skins.CreateSkinDef(HENRY_PREFIX + "GRANDMASTERY_SKIN_NAME",
+                assetBundle.LoadAsset<Sprite>("texTrueProvidenceSkin"),
+                defaultRendererinfos,
+                prefabCharacterModel.gameObject,
+                RobomandoUnlockables.grandMasterySkinUnlockableDef);
+            grandMasterySkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoProvidenceMat");
+            grandMasterySkin.rendererInfos[4].defaultMaterial = assetBundle.LoadMaterial("TrueCrownMaterial");
+            grandMasterySkin.rendererInfos[4].ignoreOverlays = false;
+            grandMasterySkin.rendererInfos[5].defaultMaterial = assetBundle.LoadMaterial("CapeMaterial");
+            grandMasterySkin.rendererInfos[5].ignoreOverlays = false;
+            if (RobomandoConfig.EnableGrandmasterySkin.Value)
+                skins.Add(grandMasterySkin);
+            SkinDef sodaSkin = Modules.Skins.CreateSkinDef(HENRY_PREFIX + "SODA_SKIN_NAME",
+                assetBundle.LoadAsset<Sprite>("texSodaSkin"),
+                defaultRendererinfos,
+                prefabCharacterModel.gameObject,
+                RobomandoUnlockables.sodaSkinUnlockableDef);
+            sodaSkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoSodaMat");
+            //masterySkin.rendererInfos[1].defaultMaterial = assetBundle.LoadMaterial("RobomandoProvidenceMat");
+            sodaSkin.rendererInfos[3].defaultMaterial = assetBundle.LoadMaterial("SodaHatMaterial");
+            if (RobomandoConfig.EnableSodaSkin.Value)
+                skins.Add(sodaSkin);
             #endregion
 
             //uncomment this when you have a mastery skin
@@ -479,11 +536,21 @@ namespace RobomandoMod.Survivors.Robomando
             if (report.victimBody.baseNameToken.Equals("ROB_ROBOMANDO_NAME"))
             {
                 Util.PlaySound("LegoDeathSound", report.victimBody.gameObject);
-                if (!RobomandoConfig.ShutHimUp.Value)
+                if (!RobomandoConfig.RoboTalks.Value)
                 {
-                    Util.PlaySound("DeathVoice", report.victimBody.gameObject);
+                    //Util.PlaySound("DeathVoice", report.victimBody.gameObject);
+                    TryPlayVoiceLine("DeathVoice", report.victimBody.gameObject);
                 }
                     
+            }
+        }
+
+        public static void TryPlayVoiceLine(string line, GameObject origin)
+        {
+            if (RobomandoConfig.RoboTalks.Value)
+            {
+                Log.Debug($"Tried to play sound {line}.");
+                Util.PlaySound(line, origin);
             }
         }
 

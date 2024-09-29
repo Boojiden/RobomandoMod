@@ -1,9 +1,11 @@
 ﻿using EntityStates;
+using R2API;
 using Rewired;
 using RobomandoMod.Survivors.Robomando;
 using RoR2;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Events;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using static RoR2.BulletAttack;
@@ -20,10 +22,11 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
         public static float force = 800f;
         public static float recoil = 3f;
         public static float range = 64f;
+
         //RoR2/Junk/Wisp/TracerWisp.prefab
         //RoR2/Base/Golem/TracerGolem.prefab
         public static GameObject tracerEffectPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/Wisp/TracerWisp.prefab").WaitForCompletion();
-        public static GameObject fireFX = EntityStates.Commando.CommandoWeapon.FirePistol2.muzzleEffectPrefab;
+        //public static GameObject fireFX = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/Hitspark1.prefab").WaitForCompletion();
         private float duration;
         private float fireTime;
         private bool hasFired;
@@ -76,6 +79,24 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                     Ray aimRay = GetAimRay();
                     AddRecoil(-1f * recoil, -2f * recoil, -0.5f * recoil, 0.5f * recoil);
 
+                    GameObject tracer = tracerEffectPrefab;
+                    //tracer.transform.GetChild(2).localScale = new Vector3 (0f, 64f, 0f);
+                    Destroy(tracer.GetComponent<Tracer>());
+                    Tracer tr = tracer.AddComponent<Tracer>();
+                    tr.startTransform = tracer.transform.GetChild(2).GetChild(0);
+                    tr.beamObject = tracer.transform.GetChild(2).gameObject;
+                    tr.beamDensity = 10;
+                    tr.headTransform = tracer.transform.GetChild(0);
+                    tr.tailTransform = tracer.transform.GetChild(1);
+                    tr.speed = 250;
+                    tr.length = 64;
+                    tracer.AddComponent<DestroyOnTimer>().duration = 1f;
+
+                    LineRenderer lr = tracer.GetComponent<LineRenderer>();
+                    lr.widthCurve.keys[0].value = 0.75f;
+                    //lr.enabled = false;
+
+
                     BulletAttack attack = new BulletAttack
                     {
                         bulletCount = 1,
@@ -87,7 +108,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                         falloffModel = BulletAttack.FalloffModel.None,
                         maxDistance = range,
                         force = force,
-                        hitMask = LayerIndex.CommonMasks.laser,
+                        hitMask = LayerIndex.CommonMasks.bullet,
                         minSpread = 0f,
                         maxSpread = 0f,
                         isCrit = RollCrit(),
@@ -96,15 +117,15 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                         smartCollision = true,
                         procChainMask = default,
                         procCoefficient = procCoefficient,
-                        radius = 0.75f,
+                        radius = 1f,
                         sniper = false,
                         stopperMask = LayerIndex.world.mask,
                         weapon = null,
-                        tracerEffectPrefab = tracerEffectPrefab,
+                        tracerEffectPrefab = tracer,
                         spreadPitchScale = 1f,
                         spreadYawScale = 1f,
                         queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
-                        hitEffectPrefab = EntityStates.Commando.CommandoWeapon.FirePistol2.hitEffectPrefab,
+                        hitEffectPrefab = RobomandoAssets.zapHitImpactEffect,
                     };
                     attack.Fire();
                 }

@@ -10,7 +10,12 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
     {
         public static float duration = 1f;
         public static float initialSpeedCoefficient = 1.8f;
-        public static float crashDuration = 2f;
+        public static float crashDuration = RobomandoStaticValues.diveCrashTime;
+
+        //Literal speed of the animation
+        public const float crashBaseDuraction = 2f;
+
+
         public static float finalSpeedCoefficient = 0.9f;
         public static float upwardThrust = 15f;
 
@@ -67,6 +72,16 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             }
         }
 
+        private float GetAttackSpeedRollTime()
+        {
+            return crashDuration / attackSpeedStat;
+        }
+
+        private float GetAnimSpeedRoll()
+        {
+            return GetAttackSpeedRollTime() / crashBaseDuraction;
+        }
+
         private void RecalculateRollSpeed()
         {
             rollSpeed = moveSpeedStat * Mathf.Lerp(initialSpeedCoefficient, finalSpeedCoefficient, fixedAge / duration);
@@ -101,12 +116,10 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             {
                 if(canLeave == false)
                 {
-                    PlayAnimation("FullBody, Override", "RollCrash", "Roll.playbackRate", crashDuration);
+                    animator.SetFloat("Roll.playbackRate", GetAnimSpeedRoll());
+                    PlayAnimation("FullBody, Override", "RollCrash", "Roll.playbackRate", GetAttackSpeedRollTime());
                     Util.PlaySound("GroundHit", gameObject);
-                    if (!RobomandoConfig.ShutHimUp.Value)
-                    {
-                        Util.PlaySound("GroundHitVoice", gameObject);
-                    }
+                    RobomandoSurvivor.TryPlayVoiceLine("GroundHitVoice", gameObject);
                     characterMotor.velocity = Vector3.zero;
                 }
                 canLeave = true;
@@ -115,7 +128,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             if (canLeave)
             {
                 currentGroundDuration += GetDeltaTime();
-                if (currentGroundDuration > crashDuration)
+                if (currentGroundDuration > GetAttackSpeedRollTime())
                 {
                     outer.SetNextStateToMain();
                 }

@@ -18,6 +18,7 @@ namespace RobomandoMod
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.EveryoneNeedSameModVersion)]
     [BepInPlugin(MODUID, MODNAME, MODVERSION)]
     [BepInDependency(NetworkingAPI.PluginGUID)]
+    [BepInDependency("com.rune580.riskofoptions")]
     public class RobomandoPlugin : BaseUnityPlugin
     {
         // if you do not change this, you are giving permission to deprecate the mod-
@@ -28,7 +29,7 @@ namespace RobomandoMod
         public const string MODVERSION = "1.0.0";
 
         // a prefix for name tokens to prevent conflicts- please capitalize all name tokens for convention
-        public const string DEVELOPER_PREFIX = "ROB";
+        public const string DEVELOPER_PREFIX = "RAT";
 
         public static RobomandoPlugin instance;
 
@@ -50,5 +51,7 @@ namespace RobomandoMod
             // make a content pack and add it. this has to be last
             new Modules.ContentPacks().Initialize();
         }
+
+        
     }
 }
