@@ -105,7 +105,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                         damage = damageCoefficient * damageStat,
                         damageColorIndex = DamageColorIndex.Default,
                         damageType = DamageType.Stun1s,
-                        falloffModel = BulletAttack.FalloffModel.None,
+                        falloffModel = BulletAttack.FalloffModel.DefaultBullet,
                         maxDistance = range,
                         force = force,
                         hitMask = LayerIndex.CommonMasks.bullet,

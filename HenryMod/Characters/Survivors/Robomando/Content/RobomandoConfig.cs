@@ -3,12 +3,31 @@ using RobomandoMod.Modules;
 using RiskOfOptions;
 using RiskOfOptions.Options;
 using RiskOfOptions.OptionConfigs;
+using RoR2;
+using UnityEngine;
+using RoR2.Skills;
 
 namespace RobomandoMod.Survivors.Robomando
 {
     public static class RobomandoConfig
     {
-        public static ConfigEntry<bool> allowStatTweaks;
+        public static ConfigEntry<bool> allowAbilityStatTweaks;
+
+        //public static ConfigEntry<bool> allowBodyStatTweaks;
+
+        //public static ConfigEntry<float> HealthReplacement;
+        //public static ConfigEntry<float> HealthGrowthReplacement;
+
+        //public static ConfigEntry<float> HealthRegenReplacement;
+        //public static ConfigEntry<float> HealthRegenGrowthReplacement;
+
+        //public static ConfigEntry<float> DamageReplacement;
+        //public static ConfigEntry<float> DamageGrowthReplacement;
+
+        //public static ConfigEntry<float> ArmorReplacement;
+        //public static ConfigEntry<float> SpeedReplacement;
+        //TODO: Finish Config
+        //public static ConfigEntry<float> ZapCooldownReplacement;
 
         public static ConfigEntry<bool> RoboTalks;
 
@@ -46,7 +65,7 @@ namespace RobomandoMod.Survivors.Robomando
             RobomandoTokens.ChangeSingleShotText();
         }
 
-        public static void ApplyZapChange()
+        public static void ApplyZapChange(bool LoadFromInit)
         {
             if (!CheckIfShouldApplyConfigStats())
             {
@@ -55,10 +74,18 @@ namespace RobomandoMod.Survivors.Robomando
             RobomandoStaticValues.zapDamageCoefficient = ZapDamageReplacement.Value / 100f;
             RobomandoStaticValues.zapProcCoefficient = ZapCoefficientReplacement.Value;
             RobomandoStaticValues.zapCooldown = ZapCooldownReplacement.Value;
+
+            if (!LoadFromInit)
+            {
+                var def = SkillCatalog.GetSkillDef(SkillCatalog.FindSkillIndexByName("RobomandoZap"));
+                def.baseRechargeInterval = RobomandoStaticValues.zapCooldown;
+                //SkillCatalog.SetSkillDefs(new SkillDef[]{def});
+            }
+            
             RobomandoTokens.ChangeZapText();
         }
 
-        public static void ApplyDiveChanges()
+        public static void ApplyDiveChanges(bool LoadFromInit)
         {
             if (!CheckIfShouldApplyConfigStats())
             {
@@ -66,6 +93,14 @@ namespace RobomandoMod.Survivors.Robomando
             }
             RobomandoStaticValues.diveCooldown = DiveCooldownReplacement.Value;
             RobomandoStaticValues.diveCrashTime = DiveCrashReplacement.Value;
+            if(!LoadFromInit)
+            {
+                var def = SkillCatalog.GetSkillDef(SkillCatalog.FindSkillIndexByName("RobomandoRoll"));
+                def.baseRechargeInterval = RobomandoStaticValues.diveCooldown;
+                //SkillCatalog.SetSkillDefs(new SkillDef[] { def });
+                //CharacterBody body = BodyCatalog.FindBodyPrefab("RobomandoBody").GetComponent<CharacterBody>();
+                //body.skillLocator.utility.skillDef.baseRechargeInterval = RobomandoStaticValues.diveCooldown;
+            }
         }
 
         public static void ApplyHackChanges()
@@ -81,7 +116,7 @@ namespace RobomandoMod.Survivors.Robomando
 
         private static bool CheckIfStatsDisabled()
         {
-            return !allowStatTweaks.Value;
+            return !allowAbilityStatTweaks.Value;
         }
 
         private static bool CheckIfShouldApplyConfigStats()
@@ -103,9 +138,9 @@ namespace RobomandoMod.Survivors.Robomando
             string durationFormatString = "{0:0}s";
             string duration2SigFigFormatString = "{0:0.00}s";
 
-            allowStatTweaks = Config.MyConfig.Bind<bool>("Abilities", "Allow Ability Stat Modifiers", false, "Allow for the editing of Robomando's ability stats. Uncheck if you plan on playing multiplayer, since configs are as of yet unsynced.");
-            allowStatTweaksOnLaunch = allowStatTweaks.Value;
-            ModSettingsManager.AddOption(new CheckBoxOption(allowStatTweaks, true));
+            allowAbilityStatTweaks = Config.MyConfig.Bind<bool>("Abilities", "Allow Ability Stat Modifiers", false, "Allow for the editing of Robomando's ability stats. Uncheck if you plan on playing multiplayer, since configs are as of yet unsynced.");
+            allowStatTweaksOnLaunch = allowAbilityStatTweaks.Value;
+            ModSettingsManager.AddOption(new CheckBoxOption(allowAbilityStatTweaks, true));
 
             SingleShotDamageReplacement = Config.MyConfig.Bind<float>("Abilities", "Single Shot Damage", 100, "Sets the damage of Single Shot.");
             ModSettingsManager.AddOption(new SliderOption(SingleShotDamageReplacement, new SliderConfig{ min = 10, max = 300, checkIfDisabled = CheckIfStatsDisabled }));
@@ -118,14 +153,14 @@ namespace RobomandoMod.Survivors.Robomando
             ZapCoefficientReplacement = Config.MyConfig.Bind<float>("Abilities", "Zap Proc Coefficient", 3, "Sets the proc coefficient of De-Escalate.");
             ModSettingsManager.AddOption(new SliderOption(ZapCoefficientReplacement, new SliderConfig { min = 0, max = 10 , FormatString = nonPercentFormatString, checkIfDisabled = CheckIfStatsDisabled }));
             ZapCooldownReplacement = Config.MyConfig.Bind<float>("Abilities", "Zap Cooldown", 3, "Sets the cooldown of De-Escalate (Requires Restart).");
-            ModSettingsManager.AddOption(new SliderOption(ZapCooldownReplacement, new SliderConfig { min = 0.5f, max = 10, FormatString = durationFormatString, restartRequired = true, checkIfDisabled = CheckIfStatsDisabled }));
-            ApplyZapChange();
+            ModSettingsManager.AddOption(new SliderOption(ZapCooldownReplacement, new SliderConfig { min = 0.5f, max = 10, FormatString = durationFormatString, checkIfDisabled = CheckIfStatsDisabled }));
+            ApplyZapChange(true);
 
             DiveCooldownReplacement = Config.MyConfig.Bind<float>("Abilities", "Evasive Maneuver Cooldown", 4, "Sets the cooldown of Evasive Maneuver (Requires Restart).");
-            ModSettingsManager.AddOption(new SliderOption(DiveCooldownReplacement, new SliderConfig { min = 0.5f, max = 10, FormatString = durationFormatString, restartRequired = true , checkIfDisabled = CheckIfStatsDisabled }));
+            ModSettingsManager.AddOption(new SliderOption(DiveCooldownReplacement, new SliderConfig { min = 0.5f, max = 10, FormatString = durationFormatString, checkIfDisabled = CheckIfStatsDisabled }));
             DiveCrashReplacement = Config.MyConfig.Bind<float>("Abilities", "Evasive Maneuver Crash Duration", 2, "How long is Robomando stunned when Evasive Maneuver ends?");
             ModSettingsManager.AddOption(new SliderOption(DiveCrashReplacement, new SliderConfig { min = 0.5f, max = 10, FormatString = duration2SigFigFormatString, checkIfDisabled = CheckIfStatsDisabled }));
-            ApplyDiveChanges();
+            ApplyDiveChanges(true);
 
             HackDurationReplacement = Config.MyConfig.Bind<float>("Abilities", "Re-Wire Duration", 3.33f, "How long is Robomando's Re-Wire animation at base?");
             ModSettingsManager.AddOption(new SliderOption(HackDurationReplacement, new SliderConfig { min = 0.5f, max = 10, FormatString = duration2SigFigFormatString, checkIfDisabled = CheckIfStatsDisabled }));
@@ -138,12 +173,12 @@ namespace RobomandoMod.Survivors.Robomando
             SingleShotDamageReplacement.SettingChanged += (sender, args) => { ApplySingleShotChange(); };
             SingleShotCoefficientReplacement.SettingChanged += (sender, args) => { ApplySingleShotChange(); };
 
-            ZapDamageReplacement.SettingChanged += (sender, args) => { ApplyZapChange(); };
-            ZapCoefficientReplacement.SettingChanged += (sender, args) => { ApplyZapChange(); };
-            ZapCooldownReplacement.SettingChanged += (sender, args) => { ApplyZapChange(); };
+            ZapDamageReplacement.SettingChanged += (sender, args) => { ApplyZapChange(false); };
+            ZapCoefficientReplacement.SettingChanged += (sender, args) => { ApplyZapChange(false); };
+            ZapCooldownReplacement.SettingChanged += (sender, args) => { ApplyZapChange(false); };
 
-            DiveCooldownReplacement.SettingChanged += (sender, args) => { ApplyDiveChanges(); };
-            DiveCrashReplacement.SettingChanged += (sender, args) => { ApplyDiveChanges(); };
+            DiveCooldownReplacement.SettingChanged += (sender, args) => { ApplyDiveChanges(false); };
+            DiveCrashReplacement.SettingChanged += (sender, args) => { ApplyDiveChanges(false); };
 
             HackDurationReplacement.SettingChanged += (sender, args) => { ApplyHackChanges(); };
             HackCooldownReplacement.SettingChanged += (sender, args) => { ApplyHackChanges(); };

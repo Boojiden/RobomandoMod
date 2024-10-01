@@ -542,6 +542,11 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: ef28bb41a37033a4bbf9691307ba2b43, type: 2}
+    - target: {fileID: 2892374673266821131, guid: e3d38899f192cab4aae024e9936697de,
+        type: 3}
+      propertyPath: m_Name
+      value: mdlAntenna
+      objectReference: {fileID: 0}
     - target: {fileID: 3555367424883365420, guid: e3d38899f192cab4aae024e9936697de,
         type: 3}
       propertyPath: m_Controller
@@ -552,11 +557,6 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: ef28bb41a37033a4bbf9691307ba2b43, type: 2}
-    - target: {fileID: 4117818605580610822, guid: e3d38899f192cab4aae024e9936697de,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 981fcf43e0fc06943903c79dc911852d, type: 2}
     - target: {fileID: 8315534762481965796, guid: e3d38899f192cab4aae024e9936697de,
         type: 3}
       propertyPath: m_Name

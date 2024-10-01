@@ -18,19 +18,19 @@ namespace RobomandoMod.Survivors.Robomando
 
         public static void ChangeSingleShotText()
         {
-            string prefix = RobomandoSurvivor.HENRY_PREFIX;
+            string prefix = RobomandoSurvivor.ROBO_PREFIX;
             Language.SetTemporaryValue(prefix + "PRIMARY_SHOT_DESCRIPTION", Tokens.agilePrefix + $" Shoot for <style=cIsDamage>{100f * RobomandoStaticValues.shootDamageCoefficient}% damage</style>.");
         }
 
         public static void ChangeZapText()
         {
-            string prefix = RobomandoSurvivor.HENRY_PREFIX;
+            string prefix = RobomandoSurvivor.ROBO_PREFIX;
             Language.SetTemporaryValue(prefix + "SECONDARY_ZAP_DESCRIPTION", Tokens.agilePrefix + $" <style=cIsDamage>Stunning.</style> Fire a small, <style=cIsDamage>piercing</style> electric pulse for <style=cIsDamage>{100f * RobomandoStaticValues.zapDamageCoefficient}% damage.");
         }
 
         public static void AddRobomandoTokens()
         {
-            string prefix = RobomandoSurvivor.HENRY_PREFIX;
+            string prefix = RobomandoSurvivor.ROBO_PREFIX;
 
             string desc = "Your Robomando Model 7 is equipped with all of the tools necessary to salvage any mechanical device encountered in the wild.<color=#CCD3E0>" + Environment.NewLine + Environment.NewLine
              + "< ! > His Hack can co-op machines of any kind, even from a competitor!" + Environment.NewLine + Environment.NewLine

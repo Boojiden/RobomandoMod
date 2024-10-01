@@ -10,8 +10,8 @@ namespace RobomandoMod.Survivors.Robomando.Achievements
     [RegisterAchievement(identifier, unlockableIdentifier, null, 10, typeof(RobomandoSodaAchievementServer))]
     public class RobomandoSodaAchievement : BaseAchievement
     {
-        public const string identifier = RobomandoSurvivor.HENRY_PREFIX + "SodaAchievement";
-        public const string unlockableIdentifier = RobomandoSurvivor.HENRY_PREFIX + "SodaUnlockable";
+        public const string identifier = RobomandoSurvivor.ROBO_PREFIX + "SodaAchievement";
+        public const string unlockableIdentifier = RobomandoSurvivor.ROBO_PREFIX + "SodaUnlockable";
 
         public static string RequiredCharacterBody => RobomandoSurvivor.instance.bodyName;
 

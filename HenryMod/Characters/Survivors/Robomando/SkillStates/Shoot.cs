@@ -11,7 +11,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
     {
         public static float damageCoefficient = RobomandoStaticValues.shootDamageCoefficient;
         public static float procCoefficient = 1f;
-        public static float baseDuration = 0.3f;
+        public static float baseDuration = 0.33f;
         //delay on firing is usually ass-feeling. only set this if you know what you're doing
         public static float firePercentTime = 0.0f;
         public static float force = 100f;
@@ -80,7 +80,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                         damage = damageCoefficient * damageStat,
                         damageColorIndex = DamageColorIndex.Default,
                         damageType = DamageType.Generic,
-                        falloffModel = BulletAttack.FalloffModel.None,
+                        falloffModel = BulletAttack.FalloffModel.DefaultBullet,
                         maxDistance = range,
                         force = force,
                         hitMask = LayerIndex.CommonMasks.bullet,

@@ -60,6 +60,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             RoR2.PurchaseInteraction pInteraction = device.GetComponentInChildren<RoR2.PurchaseInteraction>();
             if (pInteraction != null)
             {
+                //Debug.Log(pInteraction.displayNameToken);
                 if (!pInteraction.isShrine && pInteraction.costType == CostTypeIndex.Money)
                 {
                     if (pInteraction.displayNameToken.Equals("GOLDTOTEM_NAME"))
@@ -68,9 +69,20 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                     }
                     return true;
                 }
-                else if (pInteraction.displayNameToken.Equals("DUPLICATOR_NAME") || pInteraction.displayNameToken.Equals("DUPLICATOR_MILITARY_NAME") || pInteraction.displayNameToken.Equals("DUPLICATOR_WILD_NAME"))
+                else
                 {
-                    return true;
+                    try
+                    {
+                        if(device.GetComponent<EntityStateMachine>().mainStateType.typeName == "EntityStates.Duplicator.Duplicating")
+                        {
+                            return true;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        //Debug.LogError(e.StackTrace);
+                        //Debug.Log("Cant cast to EntityStateMachine");
+                    }
                 }
             }
             return false;
@@ -115,11 +127,28 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
 
         public void SetPrinterItemType(PurchaseInteraction pInteraction)
         {
+
+            switch (pInteraction.costType)
+            {
+                case CostTypeIndex.WhiteItem:
+                    type = PrinterItemType.WHITE;
+                    break;
+                case CostTypeIndex.GreenItem:
+                    type = PrinterItemType.GREEN;
+                    break;
+                case CostTypeIndex.RedItem:
+                    type = PrinterItemType.RED;
+                    break;
+                case CostTypeIndex.BossItem:
+                    type = PrinterItemType.YELLOW;
+                    break;
+            }
+            /*
             if (pInteraction.displayNameToken.Equals("DUPLICATOR_NAME"))
             {
                 if (pInteraction.costType == CostTypeIndex.WhiteItem)
                 {
-                    type = PrinterItemType.WHITE;
+                    
                 }
                 else
                 {
@@ -134,6 +163,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             {
                 type = PrinterItemType.YELLOW;
             }
+            */
         }
 
         public override void FixedUpdate()

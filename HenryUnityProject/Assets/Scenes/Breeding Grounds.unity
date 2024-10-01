@@ -314,6 +314,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: mdlRobomandoDisplay
       objectReference: {fileID: 0}
+    - target: {fileID: 1679016071952672929, guid: 2dde4a73a5c1eb24abc467fc289ee6fc,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1769905293476265243, guid: 2dde4a73a5c1eb24abc467fc289ee6fc,
         type: 3}
       propertyPath: m_RootOrder
