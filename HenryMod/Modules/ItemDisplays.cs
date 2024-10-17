@@ -41,7 +41,7 @@ namespace RobomandoMod.Modules
         {
             PopulateFromBody("LoaderBody");
 
-            //PopulateCustomLightningArm();
+            PopulateCustomLightningArm();
 
             //if you have any custom item displays to add here I would be very impressed
         }
@@ -87,9 +87,9 @@ namespace RobomandoMod.Modules
 
             LimbMatcher limbMatcher = display.GetComponent<LimbMatcher>();
 
-            limbMatcher.limbPairs[0].targetChildLimb = "LightningArm1";
-            limbMatcher.limbPairs[1].targetChildLimb = "LightningArm2";
-            limbMatcher.limbPairs[2].targetChildLimb = "LightningArmEnd";
+            limbMatcher.limbPairs[0].targetChildLimb = "UpperArm_R";
+            limbMatcher.limbPairs[1].targetChildLimb = "LowerArm_R";
+            limbMatcher.limbPairs[2].targetChildLimb = "Hand_R";
 
             itemDisplayPrefabs["displaylightningarmcustom"] = display;
             #endregion

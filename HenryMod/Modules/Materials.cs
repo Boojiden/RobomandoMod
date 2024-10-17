@@ -88,6 +88,7 @@ namespace RobomandoMod.Modules
             if (tempMat.IsKeywordEnabled("LIMBREMOVAL"))
             {
                 tempMat.SetInt("_LimbRemovalOn", 1);
+                Log.Debug("Enabling limb removal on " + tempMat.name);
             }
 
             cachedMaterials.Add(tempMat);

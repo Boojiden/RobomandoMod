@@ -40,7 +40,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             characterBody.SetAimTimer(2f);
             muzzleString = "Muzzle";
 
-            PlayAnimation("LeftArm, Override", "ShootGun", "ShootGun.playbackRate", 1.8f);
+            PlayAnimation("RightArm, Override", "ShootGun", "ShootGun.playbackRate", 1.8f);
         }
 
         public override void OnExit()

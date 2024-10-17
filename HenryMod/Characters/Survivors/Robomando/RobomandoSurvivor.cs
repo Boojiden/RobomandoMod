@@ -2,6 +2,7 @@
 using HenryMod.Characters.Survivors.Robomando.Content;
 using RiskOfOptions;
 using RobomandoMod.Characters.Survivors.Robomando.Components;
+using RobomandoMod.Characters.Survivors.Robomando.Content;
 using RobomandoMod.Modules;
 using RobomandoMod.Modules.Characters;
 using RobomandoMod.Survivors.Robomando.Components;
@@ -43,7 +44,7 @@ namespace RobomandoMod.Survivors.Robomando
             subtitleNameToken = ROBO_PREFIX + "SUBTITLE",
 
             characterPortrait = assetBundle.LoadAsset<Texture>("texRobomandoIcon"),
-            bodyColor = Color.white,
+            bodyColor = new Color(158f / 255f, 165f / 255f, 168f / 255f),
             sortPosition = 100,
 
             crosshair = Asset.LoadCrosshair("Standard"),
@@ -150,7 +151,7 @@ namespace RobomandoMod.Survivors.Robomando
         protected override void InitializeDisplayPrefab()
         {
             displayPrefab = Prefabs.CreateDisplayPrefab(assetBundle, displayPrefabName, bodyPrefab);
-            displayPrefab.AddComponent<SoundAnimationEvent>();
+            displayPrefab.AddComponent<DisplayAnimationEvent>();
         }
 
         private void AdditionalBodySetup()
@@ -161,20 +162,22 @@ namespace RobomandoMod.Survivors.Robomando
             bodyPrefab.AddComponent<HackIndicatorScan>().Init();
             var Locator = prefabCharacterModel.GetComponent<ChildLocator>();
 
+            gunTransform = Locator.FindChild("Gun");
+
             var test = Locator.gameObject;
 
             var antenna = Locator.FindChildGameObject(Locator.FindChildIndex("Antenna")).transform.parent.gameObject;
             var dBone = antenna.AddComponent<DynamicBone>();
 
             dBone.m_Root = antenna.transform.GetChild(1).GetChild(0);
-            dBone.m_Exclusions = new List<Transform>() { dBone.m_Root.GetChild(0).GetChild(0).GetChild(0) };
+            dBone.m_Exclusions = new List<Transform>() { dBone.m_Root.GetChild(0).GetChild(0)};
 
             var Locator2 = displayPrefab.GetComponent<CharacterModel>().GetComponent<ChildLocator>();
             var antenna2 = Locator2.FindChildGameObject(Locator2.FindChildIndex("Antenna")).transform.parent.gameObject;
             var dBone2 = antenna2.AddComponent<DynamicBone>();
 
             dBone2.m_Root = antenna2.transform.GetChild(1).GetChild(0);
-            dBone2.m_Exclusions = new List<Transform>() { dBone2.m_Root.GetChild(0).GetChild(0).GetChild(0) };
+            dBone2.m_Exclusions = new List<Transform>() { dBone2.m_Root.GetChild(0).GetChild(0)};
             //bodyPrefab.AddComponent<HuntressTrackerComopnent>();
             //anything else here
         }
@@ -197,6 +200,7 @@ namespace RobomandoMod.Survivors.Robomando
                 //don't forget to register custom entitystates in your RobomandoStates.cs
 
             Prefabs.AddEntityStateMachine(bodyPrefab, "Weapon");
+            Prefabs.AddEntityStateMachine(bodyPrefab, "LeftArm");
             //Prefabs.AddEntityStateMachine(bodyPrefab, "Weapon2");
         }
 
@@ -329,7 +333,38 @@ namespace RobomandoMod.Survivors.Robomando
                 
             });
 
-            Skills.AddSecondarySkills(bodyPrefab, secondarySkillDef1);
+            SkillDef secondarySkillDef2 = Skills.CreateSkillDef(new SkillDefInfo
+            {
+                skillName = "RobomandoBomb",
+                skillNameToken = ROBO_PREFIX + "SECONDARY_BOMB_NAME",
+                skillDescriptionToken = ROBO_PREFIX + "SECONDARY_BOMB_DESCRIPTION",
+                skillIcon = assetBundle.LoadAsset<Sprite>("texBombIcon"),
+                keywordTokens = new string[] {},
+                activationState = new EntityStates.SerializableEntityStateType(typeof(SkillStates.BouncyBomb)),
+                activationStateMachineName = "LeftArm",
+                interruptPriority = EntityStates.InterruptPriority.Skill,
+
+                baseRechargeInterval = RobomandoStaticValues.bouncyBombCooldown,
+                baseMaxStock = 2,
+
+                rechargeStock = 1,
+                requiredStock = 1,
+                stockToConsume = 1,
+
+                resetCooldownTimerOnUse = false,
+                fullRestockOnAssign = true,
+                dontAllowPastMaxStocks = false,
+                mustKeyPress = false,
+                beginSkillCooldownOnSkillEnd = false,
+
+                isCombatSkill = true,
+                canceledFromSprinting = false,
+                cancelSprintingOnActivation = true,
+                forceSprintDuringState = false,
+
+            });
+
+            Skills.AddSecondarySkills(bodyPrefab, new SkillDef[] { secondarySkillDef1, secondarySkillDef2});
         }
 
         private void AddUtiitySkills()
@@ -407,6 +442,11 @@ namespace RobomandoMod.Survivors.Robomando
             CharacterModel.RendererInfo[] defaultRendererinfos = prefabCharacterModel.baseRendererInfos;
 
             List<SkinDef> skins = new List<SkinDef>();
+            //index ref: guy, gun, crown, hat, truecrown, cape, antenna
+            List<string> defaultMeshReplacements = new List<string>{ null, null, null, null, null, null, null };
+            List<string> masteryMeshReplacements = new List<string> { null, null, "meshCrown", null, null, null, null };
+            List<string> grandMasteryMeshReplacements = new List<string> { null, null, null, null, "meshTrueCrown", null, null };
+            List<string> sodaMeshReplacements = new List<string> { null, null, null, "meshHat", null, null, null };
 
             #region DefaultSkin
             //this creates a SkinDef with all default fields
@@ -416,15 +456,17 @@ namespace RobomandoMod.Survivors.Robomando
                 prefabCharacterModel.gameObject);
 
             //these are your Mesh Replacements. The order here is based on your CustomRendererInfos from earlier
-                //pass in meshes as they are named in your assetbundle
+            //pass in meshes as they are named in your assetbundle
             //currently not needed as with only 1 skin they will simply take the default meshes
-                //uncomment this when you have another skin
+            //uncomment this when you have another skin
             //defaultSkin.meshReplacements = Modules.Skins.getMeshReplacements(assetBundle, defaultRendererinfos,
             //    "meshRobomandoSword",
             //    "meshRobomandoGun",
             //    "meshRobomando");
 
             //add new skindef to our list of skindefs. this is what we'll be passing to the SkinController
+
+            defaultSkin.meshReplacements = Modules.Skins.getMeshReplacements(assetBundle, defaultRendererinfos, defaultMeshReplacements.ToArray());
 
             skins.Add(defaultSkin);
 
@@ -435,7 +477,7 @@ namespace RobomandoMod.Survivors.Robomando
                 prefabCharacterModel.gameObject);
 
             commandoSkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoCommandoMat");
-
+            commandoSkin.meshReplacements = Modules.Skins.getMeshReplacements(assetBundle, defaultRendererinfos, defaultMeshReplacements.ToArray());
             if (RobomandoConfig.EnableCommandoSkin.Value)
                 skins.Add(commandoSkin);
 
@@ -448,7 +490,7 @@ namespace RobomandoMod.Survivors.Robomando
                 prefabCharacterModel.gameObject);
 
             BlueSkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoBlueMat");
-
+            BlueSkin.meshReplacements = Modules.Skins.getMeshReplacements(assetBundle, defaultRendererinfos, defaultMeshReplacements.ToArray());
             if (RobomandoConfig.EnableBlueSkin.Value)
                 skins.Add(BlueSkin);
 
@@ -458,7 +500,7 @@ namespace RobomandoMod.Survivors.Robomando
                 assetBundle.LoadAsset<Sprite>("texGreenSkin"),
                 defaultRendererinfos,
                 prefabCharacterModel.gameObject);
-
+            GreenSkin.meshReplacements = Modules.Skins.getMeshReplacements(assetBundle, defaultRendererinfos, defaultMeshReplacements.ToArray());
             GreenSkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoGreenMat");
 
             if (RobomandoConfig.EnableGreenSkin.Value)
@@ -478,13 +520,15 @@ namespace RobomandoMod.Survivors.Robomando
             if (RobomandoConfig.EnableMasterySkin.Value)
                 skins.Add(masterySkin);
 
-
+            masterySkin.meshReplacements = Modules.Skins.getMeshReplacements(assetBundle, defaultRendererinfos, masteryMeshReplacements.ToArray());
 
             SkinDef grandMasterySkin = Modules.Skins.CreateSkinDef(ROBO_PREFIX + "GRANDMASTERY_SKIN_NAME",
                 assetBundle.LoadAsset<Sprite>("texTrueProvidenceSkin"),
                 defaultRendererinfos,
                 prefabCharacterModel.gameObject,
                 RobomandoUnlockables.grandMasterySkinUnlockableDef);
+
+            grandMasterySkin.meshReplacements = Modules.Skins.getMeshReplacements(assetBundle, defaultRendererinfos,grandMasteryMeshReplacements.ToArray());
 
             grandMasterySkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoProvidenceMat");
             grandMasterySkin.rendererInfos[4].defaultMaterial = assetBundle.LoadMaterial("TrueCrownMaterial");
@@ -505,6 +549,8 @@ namespace RobomandoMod.Survivors.Robomando
 
             sodaSkin.rendererInfos[0].defaultMaterial = assetBundle.LoadMaterial("RobomandoSodaMat");
             sodaSkin.rendererInfos[3].defaultMaterial = assetBundle.LoadMaterial("SodaHatMaterial");
+
+            sodaSkin.meshReplacements = Modules.Skins.getMeshReplacements(assetBundle, defaultRendererinfos, sodaMeshReplacements.ToArray());
 
             if (RobomandoConfig.EnableSodaSkin.Value)
                 skins.Add(sodaSkin);
@@ -575,13 +621,19 @@ namespace RobomandoMod.Survivors.Robomando
         {
             R2API.RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
             RoR2.GlobalEventManager.onCharacterDeathGlobal += PlayFunnyDeathSounds;
+
+            if(RobomandoPlugin.emotesInstalled)
+            {
+                Debug.Log("Call AddSkeleton from survivor script");
+                RobomandoAddEmoteSkeleton.AddSkeleton(assetBundle);
+            }
         }
 
         private void PlayFunnyDeathSounds(DamageReport report)
         {
             //report.victimBody.baseNameToken
             //RoR2.Chat.SendBroadcastChat(new RoR2.Chat.SimpleChatMessage() { baseToken = $"<style=cEvent><color=#307FFF>Victim Name: {report.victimBody.baseNameToken}</color></style>" });
-            if (report.victimBody.baseNameToken.Equals("ROB_ROBOMANDO_NAME"))
+            if (report.victimBody.baseNameToken.Equals("RAT_ROBOMANDO_NAME"))
             {
                 Util.PlaySound("LegoDeathSound", report.victimBody.gameObject);
                 if (!RobomandoConfig.RoboTalks.Value)

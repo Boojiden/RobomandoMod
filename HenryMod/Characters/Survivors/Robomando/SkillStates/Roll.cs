@@ -1,4 +1,5 @@
 ﻿using EntityStates;
+using EntityStates.AffixVoid;
 using RobomandoMod.Survivors.Robomando;
 using RoR2;
 using UnityEngine;
@@ -15,6 +16,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
         //Literal speed of the animation
         public const float crashBaseDuraction = 2f;
 
+        public static float cancelTime = 5f;
 
         public static float finalSpeedCoefficient = 0.9f;
         public static float upwardThrust = 15f;
@@ -30,14 +32,38 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
 
         private bool canLeave = false;
         private bool updateVelocity = true;
+        private bool canCancel = false;
         private float currentGroundDuration = 0f;
 
         private float startingLiftTime = 0.5f;
+        private float totalSkillTime = 0f;
 
+        public void DoEnterAnimation()
+        {
+            animator.SetLayerWeight(5, 0f);
+            animator.SetLayerWeight(6, 0f);
+        }
+
+        public void DoExitAnimation()
+        {
+            animator.SetLayerWeight(5, 1f);
+            animator.SetLayerWeight(6, 1f);
+        }
+
+        public void ResetMainAnimator()
+        {
+            animator.SetBool("isMoving", false);
+            animator.SetBool("isSprinting", false);
+            animator.SetBool("isGrounded", true);
+            PlayAnimation("Body", "Idle");
+        }
         public override void OnEnter()
         {
             base.OnEnter();
             animator = GetModelAnimator();
+
+            DoEnterAnimation();
+
             canLeave = false;
             if (isAuthority && inputBank && characterDirection)
             {
@@ -99,7 +125,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             if (characterMotor && characterDirection && normalized != Vector3.zero && (!isGrounded || startingLiftTime > 0f))
             {
                 Vector3 vector = normalized * rollSpeed;
-                float d = Mathf.Max(Vector3.Dot(vector, forwardDirection), 0f);
+                float d = Mathf.Max(Vector3.Dot(vector, forwardDirection), 10f);
                 vector = forwardDirection * d;
                 vector.y = characterMotor.velocity.y;
 
@@ -107,9 +133,11 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             }
             previousPosition = transform.position;
 
+            float delta = GetDeltaTime();
+
             if(startingLiftTime > 0f)
             {
-                startingLiftTime -= GetDeltaTime();
+                startingLiftTime -= delta;
             }
 
             if (isGrounded && startingLiftTime <= 0f)
@@ -118,6 +146,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 {
                     animator.SetFloat("Roll.playbackRate", GetAnimSpeedRoll());
                     PlayAnimation("FullBody, Override", "RollCrash", "Roll.playbackRate", GetAttackSpeedRollTime());
+                    ResetMainAnimator();
                     Util.PlaySound("GroundHit", gameObject);
                     RobomandoSurvivor.TryPlayVoiceLine("GroundHitVoice", gameObject);
                     characterMotor.velocity = Vector3.zero;
@@ -131,6 +160,30 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 if (currentGroundDuration > GetAttackSpeedRollTime())
                 {
                     outer.SetNextStateToMain();
+                    DoExitAnimation();
+                }
+            }
+            else
+            {
+                if (!canCancel)
+                {
+                    if (totalSkillTime < cancelTime)
+                    {
+                        totalSkillTime += delta;
+                    }
+                    else
+                    {
+                        canCancel = true;
+                        //Debug.Log("Should be able to cancel");
+                    }
+                }
+                else
+                {
+                    if(isAuthority && inputBank.skill3.down)
+                    {
+                        outer.SetNextStateToMain();
+                        DoExitAnimation();
+                    }
                 }
             }
         }
@@ -140,7 +193,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             if (cameraTargetParams) cameraTargetParams.fovOverride = -1f;
             base.OnExit();
 
-            characterMotor.disableAirControlUntilCollision = true;
+            //characterMotor.disableAirControlUntilCollision = true;
         }
 
         public override void OnSerialize(NetworkWriter writer)
@@ -153,6 +206,10 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
         {
             base.OnDeserialize(reader);
             forwardDirection = reader.ReadVector3();
+        }
+        public override InterruptPriority GetMinimumInterruptPriority()
+        {
+            return InterruptPriority.PrioritySkill;
         }
     }
 }

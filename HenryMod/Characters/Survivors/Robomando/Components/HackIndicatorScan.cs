@@ -13,8 +13,6 @@ namespace RobomandoMod.Characters.Survivors.Robomando.Components
     {
         private CharacterBody robo;
 
-        private float searchRadius = 10f;
-
         private Dictionary<GameObject, HackIndicator> indicators;
         private GameObject cachedInteractable = null;
         private Indicator ind;
@@ -52,8 +50,10 @@ namespace RobomandoMod.Characters.Survivors.Robomando.Components
                             }
                             //Debug.Log("Creating New Indicator");
                             //TODO: Multishops put the indicator below where they should
+                            //GetComponent<EntityStateMachine>().mainStateType.typeName == "EntityStates.Duplicator.Duplicating"
+                            //GetComponent<PurchaseInteraction>().displayNameToken.Equals("MULTISHOP_TERMINAL_NAME")
                             ind = new Indicator(robo.gameObject.transform.root.gameObject, RobomandoAssets.hackIndicator);
-                            if (driver.currentInteractable.GetComponent<PurchaseInteraction>().displayNameToken.Equals("MULTISHOP_TERMINAL_NAME"))
+                            if (driver.currentInteractable.TryGetComponent<ShopTerminalBehavior>(out var shop) && !Hack.IsPrinter(driver.currentInteractable))
                             {
                                 GameObject pickupDisplay = driver.currentInteractable.transform.GetComponentInChildren<PickupDisplay>().gameObject;
                                 ind.targetTransform = pickupDisplay.transform;

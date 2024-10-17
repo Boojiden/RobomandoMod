@@ -11,7 +11,9 @@ Material:
   m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
   m_ValidKeywords:
   - _EMISSION
-  m_InvalidKeywords: []
+  - _METALLICGLOSSMAP
+  m_InvalidKeywords:
+  - LIMBREMOVAL
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -38,15 +40,15 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
-        m_Texture: {fileID: 2800000, guid: 200937d2d0f4d82418f1037417067009, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2100ba901710d2c41914e18acc1239ab, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: cdacb33c06f200148907bda3f85e858b, type: 3}
+        m_Texture: {fileID: 2800000, guid: b58981bbaa94a0e42a947d91e3ed22a0, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 1bafcde8c82f3b842aaf86fa06cc60ef, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:

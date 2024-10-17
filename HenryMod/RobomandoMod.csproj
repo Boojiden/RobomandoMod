@@ -37,6 +37,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Reference Include="CustomEmotesAPI">
+	    <HintPath>..\..\Libs\CustomEmotesAPI.dll</HintPath>
+	  </Reference>
 	  <Reference Include="R2API.Networking">
 	    <HintPath>..\..\..\..\..\..\AppData\Roaming\r2modmanPlus-local\RiskOfRain2\profiles\RobomandoDev\BepInEx\plugins\RiskofThunder-R2API_Networking\R2API.Networking\R2API.Networking.dll</HintPath>
 	  </Reference>

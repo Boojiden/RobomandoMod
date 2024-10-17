@@ -13,6 +13,8 @@ namespace RobomandoMod.Survivors.Robomando
             Modules.Content.AddEntityState(typeof(Roll));
 
             Modules.Content.AddEntityState(typeof(Hack));
+
+            Modules.Content.AddEntityState(typeof(BouncyBomb));
         }
     }
 }

@@ -4,6 +4,9 @@ using RobomandoMod.Modules;
 using System;
 using RoR2.Projectile;
 using System.Security.Cryptography;
+using UnityEngine.AddressableAssets;
+using System.Linq;
+using RobomandoMod.Characters.Survivors.Robomando.Components;
 
 namespace RobomandoMod.Survivors.Robomando
 {
@@ -11,6 +14,9 @@ namespace RobomandoMod.Survivors.Robomando
     {
         // particle effects
         public static GameObject zapHitImpactEffect;
+        public static GameObject bombHitWorldEffect;
+
+        public static GameObject projectileBouncyBomb;
 
         public static GameObject hackIndicator;
 
@@ -27,18 +33,18 @@ namespace RobomandoMod.Survivors.Robomando
             swordHitSoundEvent = Content.CreateAndAddNetworkSoundEventDef("RobomandoSwordHit");
 
             CreateEffects();
-
-            CreateProjectiles();
             */
+            CreateProjectiles();
+            
         }
 
         #region effects
         private static void CreateEffects()
         {
-            CreateBombExplosionEffect();
+            //CreateBombExplosionEffect();
 
             zapHitImpactEffect = _assetBundle.LoadEffect("ImpactRobomandoZap");
-            
+            bombHitWorldEffect = _assetBundle.LoadEffect("ImpactRobomandoBombBounce");
             //swordSwingEffect = _assetBundle.LoadEffect("RobomandoSwordSwingEffect", true);
             //swordHitImpactEffect = _assetBundle.LoadEffect("ImpactRobomandoSlash");
         }
@@ -96,39 +102,50 @@ namespace RobomandoMod.Survivors.Robomando
         #region projectiles
         private static void CreateProjectiles()
         {
-            /*
+            
             CreateBombProjectile();
-            Content.AddProjectilePrefab(bombProjectilePrefab);
-            */
+            Content.AddProjectilePrefab(projectileBouncyBomb);
+            
         }
 
         private static void CreateBombProjectile()
         {
-            /*
             //highly recommend setting up projectiles in editor, but this is a quick and dirty way to prototype if you want
-            bombProjectilePrefab = Asset.CloneProjectilePrefab("CommandoGrenadeProjectile", "RobomandoBombProjectile");
+            projectileBouncyBomb = Asset.CloneProjectilePrefab("CommandoGrenadeProjectile", "RobomandoBombProjectile");
 
             //remove their ProjectileImpactExplosion component and start from default values
-            UnityEngine.Object.Destroy(bombProjectilePrefab.GetComponent<ProjectileImpactExplosion>());
-            ProjectileImpactExplosion bombImpactExplosion = bombProjectilePrefab.AddComponent<ProjectileImpactExplosion>();
+            UnityEngine.Object.Destroy(projectileBouncyBomb.GetComponent<ProjectileImpactExplosion>());
+            projectileBouncyBomb.GetComponent<ProjectileSimple>().lifetime = 99f;
+            ProjectileImpactExplosion bombImpactExplosion = projectileBouncyBomb.AddComponent<ProjectileImpactExplosion>();
             
-            bombImpactExplosion.blastRadius = 16f;
+            bombImpactExplosion.blastRadius = 8f;
+            bombImpactExplosion.blastProcCoefficient = RobomandoStaticValues.bouncyBombProcCoefficient;
             bombImpactExplosion.blastDamageCoefficient = 1f;
             bombImpactExplosion.falloffModel = BlastAttack.FalloffModel.None;
             bombImpactExplosion.destroyOnEnemy = true;
-            bombImpactExplosion.lifetime = 12f;
-            bombImpactExplosion.impactEffect = bombExplosionEffect;
-            bombImpactExplosion.lifetimeExpiredSound = Content.CreateAndAddNetworkSoundEventDef("RobomandoBombExplosion");
+            bombImpactExplosion.lifetime = 6f;
+            bombImpactExplosion.impactEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/StickyBomb/BehemothVFX.prefab").WaitForCompletion(); ;
+            bombImpactExplosion.lifetimeExpiredSound = Content.CreateAndAddNetworkSoundEventDef("Play_item_proc_behemoth");
             bombImpactExplosion.timerAfterImpact = true;
-            bombImpactExplosion.lifetimeAfterImpact = 0.1f;
+            bombImpactExplosion.lifetimeAfterImpact = 0.25f;
+            bombImpactExplosion.destroyOnWorld = false;
+            bombImpactExplosion.impactOnWorld = false;
+            bombImpactExplosion.explodeOnLifeTimeExpiration = true;
 
-            ProjectileController bombController = bombProjectilePrefab.GetComponent<ProjectileController>();
+            var bouncyMat = _assetBundle.LoadAsset<PhysicMaterial>("BouncyBombPhysicsMaterial");
 
-            if (_assetBundle.LoadAsset<GameObject>("RobomandoBombGhost") != null)
-                bombController.ghostPrefab = _assetBundle.CreateProjectileGhostPrefab("RobomandoBombGhost");
+            ProjectileController bombController = bombImpactExplosion.GetComponent<ProjectileController>();
+
+            if (_assetBundle.LoadAsset<GameObject>("BouncyBombGhost") != null)
+                bombController.ghostPrefab = _assetBundle.CreateProjectileGhostPrefab("BouncyBombGhost");
             
             bombController.startSound = "";
-            */
+
+            projectileBouncyBomb.GetComponent<Collider>().material = bouncyMat;
+
+            projectileBouncyBomb.AddComponent<BombImpactComponent>();
+
+
         }
         #endregion projectiles
 

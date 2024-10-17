@@ -23,5 +23,11 @@ namespace RobomandoMod.Survivors.Robomando
         public static float successfullHackCooldown = 8f;
 
         public static float unsuccessfullHackCooldown = 2f;
+
+        public static float bouncyBombDamageCoefficient = 4f;
+
+        public static float bouncyBombProcCoefficient = 1f;
+
+        public static float bouncyBombCooldown = 5f;
     }
 }

@@ -537,6 +537,21 @@ PrefabInstance:
       propertyPath: m_SelfAndInterCollisionIndices.Array.data[106]
       value: 311
       objectReference: {fileID: 0}
+    - target: {fileID: 328769926333291537, guid: e3d38899f192cab4aae024e9936697de,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 328769926333291537, guid: e3d38899f192cab4aae024e9936697de,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.0368
+      objectReference: {fileID: 0}
+    - target: {fileID: 328769926333291537, guid: e3d38899f192cab4aae024e9936697de,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2169841964006141921, guid: e3d38899f192cab4aae024e9936697de,
         type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -562,11 +577,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: mdlRobomandoDisplay
       objectReference: {fileID: 0}
-    - target: {fileID: 8562822879121228143, guid: e3d38899f192cab4aae024e9936697de,
-        type: 3}
-      propertyPath: m_Mesh
-      value: 
-      objectReference: {fileID: 4300000, guid: ab8e986be721aec4cae54278607bf0bf, type: 2}
     - target: {fileID: 8659690236199436382, guid: e3d38899f192cab4aae024e9936697de,
         type: 3}
       propertyPath: m_RootOrder

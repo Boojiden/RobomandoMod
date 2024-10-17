@@ -111,7 +111,7 @@ namespace RobomandoMod.Modules
                 new SkinDef.MeshReplacement
                 {
                     renderer = defaultRendererInfos[i].renderer,
-                    mesh = assetBundle.LoadAsset<Mesh>(meshes[i])
+                    mesh = meshes[i].Equals("None") ? null : assetBundle.LoadAsset<Mesh>(meshes[i])
                 });
             }
 

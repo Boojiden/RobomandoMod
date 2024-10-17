@@ -30,7 +30,8 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
         public static GameObject fireFX = EntityStates.Commando.CommandoWeapon.FireLightsOut.effectPrefab;
         //RoR2/Base/Lightning/LightningStrikeImpact.prefab 
         public static GameObject impactFX = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Lightning/LightningStrikeImpact.prefab").WaitForCompletion();
-        public static GameObject printerDestroyFX = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ExplodeOnDeath/WilloWispExplosion.prefab").WaitForCompletion();
+        public static GameObject printerDestroyFX = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/StickyBomb/BehemothVFX.prefab").WaitForCompletion();
+        public static GameObject printerDestroyFX2 = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Toolbot/CryoCanisterExplosionPrimary.prefab").WaitForCompletion();
         public static event Action<GameObject, GameObject> onRobomandoHackGlobal;
         //delays for projectiles feel absolute ass so only do this if you know what you're doing, otherwise it's best to keep it at 0
 
@@ -71,18 +72,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 }
                 else
                 {
-                    try
-                    {
-                        if(device.GetComponent<EntityStateMachine>().mainStateType.typeName == "EntityStates.Duplicator.Duplicating")
-                        {
-                            return true;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        //Debug.LogError(e.StackTrace);
-                        //Debug.Log("Cant cast to EntityStateMachine");
-                    }
+                    return IsPrinter(device);
                 }
             }
             return false;
@@ -277,8 +267,30 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 PickupDropletController.CreatePickupDroplet(pickupIndex, spawnPos, device.transform.rotation * new Vector3(0, 15, 6));
                 
                 EffectManager.SpawnEffect(printerDestroyFX, new EffectData { origin = spawnPos }, true);
-                AkSoundEngine.PostEvent("Play_wDroneDeath", pInter.gameObject);
+                EffectManager.SpawnEffect(printerDestroyFX2, new EffectData { origin = spawnPos }, true);
+
+
+                //AkSoundEngine.PostEvent("Play_item_proc_behemoth", pInter.gameObject);
             }
+        }
+
+        public static bool IsPrinter(GameObject device)
+        {
+            try
+            {
+                if (device.GetComponent<EntityStateMachine>().mainStateType.typeName == "EntityStates.Duplicator.Duplicating")
+                {
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                return false;
+                //Debug.LogError(e.StackTrace);
+                //Debug.Log("Cant cast to EntityStateMachine");
+            }
+
+            return false;
         }
     }
 
