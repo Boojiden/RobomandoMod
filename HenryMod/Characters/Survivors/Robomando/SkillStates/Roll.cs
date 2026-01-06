@@ -147,8 +147,8 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                     animator.SetFloat("Roll.playbackRate", GetAnimSpeedRoll());
                     PlayAnimation("FullBody, Override", "RollCrash", "Roll.playbackRate", GetAttackSpeedRollTime());
                     ResetMainAnimator();
-                    Util.PlaySound("GroundHit", gameObject);
-                    RobomandoSurvivor.TryPlayVoiceLine("GroundHitVoice", gameObject);
+                    Util.PlaySound("Play_Robo_Ground_Hit", gameObject);
+                    RobomandoSurvivor.TryPlayVoiceLine("Play_Robo_Ground_Hit_Voice", gameObject);
                     characterMotor.velocity = Vector3.zero;
                 }
                 canLeave = true;
@@ -156,7 +156,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
 
             if (canLeave)
             {
-                currentGroundDuration += GetDeltaTime();
+                currentGroundDuration += delta;
                 if (currentGroundDuration > GetAttackSpeedRollTime())
                 {
                     outer.SetNextStateToMain();
@@ -190,7 +190,13 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
 
         public override void OnExit()
         {
-            if (cameraTargetParams) cameraTargetParams.fovOverride = -1f;
+            if (cameraTargetParams)
+            {
+                cameraTargetParams.fovOverride = -1f;
+            }
+            PlayAnimation("FullBody, Override", "BufferEmpty");
+            ResetMainAnimator();
+            DoExitAnimation();
             base.OnExit();
 
             //characterMotor.disableAirControlUntilCollision = true;

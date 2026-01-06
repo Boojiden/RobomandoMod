@@ -15,6 +15,8 @@ namespace RobomandoMod.Survivors.Robomando
             Modules.Content.AddEntityState(typeof(Hack));
 
             Modules.Content.AddEntityState(typeof(BouncyBomb));
+
+            Modules.Content.AddEntityState(typeof(Overwire));
         }
     }
 }

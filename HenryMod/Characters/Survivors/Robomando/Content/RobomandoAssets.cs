@@ -7,6 +7,9 @@ using System.Security.Cryptography;
 using UnityEngine.AddressableAssets;
 using System.Linq;
 using RobomandoMod.Characters.Survivors.Robomando.Components;
+using System.Collections.Generic;
+using R2API;
+using Newtonsoft.Json.Utilities;
 
 namespace RobomandoMod.Survivors.Robomando
 {
@@ -14,17 +17,33 @@ namespace RobomandoMod.Survivors.Robomando
     {
         // particle effects
         public static GameObject zapHitImpactEffect;
+        public static GameObject zapMuzzleFlashEffect;
         public static GameObject bombHitWorldEffect;
+        public static GameObject zapTracerEffect;
+
+        public static GameObject gunImpactEffect;
+        public static GameObject gunMuzzleFlashEffect;
+        public static GameObject gunTracerEffect;
+
+        public static GameObject hackEffect;
+        public static GameObject hackRedEffect;
+        public static GameObject hackRedEffectProc;
+
+        private static List<GameObject> effects = new List<GameObject>();
 
         public static GameObject projectileBouncyBomb;
 
         public static GameObject hackIndicator;
+        public static GameObject hackIndicatorRed;
 
         private static AssetBundle _assetBundle;
 
-        public static void Init(AssetBundle assetBundle)
+        private static AssetBundle _vfxAssets;
+
+        public static void Init(AssetBundle assetBundle, AssetBundle vfxbundle)
         {
             _assetBundle = assetBundle;
+            _vfxAssets = vfxbundle;
             CreateEffects();
             CreateUI();
             /*
@@ -43,10 +62,60 @@ namespace RobomandoMod.Survivors.Robomando
         {
             //CreateBombExplosionEffect();
 
-            zapHitImpactEffect = _assetBundle.LoadEffect("ImpactRobomandoZap");
-            bombHitWorldEffect = _assetBundle.LoadEffect("ImpactRobomandoBombBounce");
+            zapHitImpactEffect = LoadEffect("ImpactRobomandoZap");
+            zapMuzzleFlashEffect = LoadEffect("RoboZapMuzzleFlash");
+            bombHitWorldEffect = LoadEffect("ImpactRobomandoBombBounce");
+            zapTracerEffect = LoadEffect("RoboZapTrail");
+
+            gunImpactEffect = LoadEffect("ImpactRobomandoGun");
+            gunMuzzleFlashEffect = LoadEffect("RoboGunMuzzleFlash");
+            gunTracerEffect = LoadEffect("RoboGunTrail");
+
+            hackEffect = LoadEffect("RobomandoHack");
+            hackRedEffect = LoadEffect("RobomandoHackRed");
+            hackRedEffectProc = LoadEffect("RobomandoHackRedProc");
             //swordSwingEffect = _assetBundle.LoadEffect("RobomandoSwordSwingEffect", true);
             //swordHitImpactEffect = _assetBundle.LoadEffect("ImpactRobomandoSlash");
+        }
+
+        private static GameObject LoadEffect(string prefabName, float lifeTime = 1f)
+        {
+            GameObject effect = _vfxAssets.LoadEffect(prefabName);
+            effects.Add(effect);
+            effect.AddComponent<KillVFX>().lifeTime = lifeTime;
+            Log.Debug("Loaded {0}".FormatWith(null, prefabName));
+            return effect;
+        }
+
+        private static GameObject LoadTracer(string prefabName, float lifeTime = 1f) 
+        {
+            GameObject effect = _vfxAssets.LoadEffect(prefabName);
+            effects.Add(effect);
+            effect.AddComponent<KillVFX>().lifeTime = lifeTime;
+
+            //var functions = effect.AddComponent<EventFunctions>();
+
+            //var points = effect.AddComponent<BeamPointsFromTransforms>();
+            //points.target = effect.GetComponent<LineRenderer>();
+            //points.pointTransforms.Append(effect.transform.GetChild(0));
+            //points.pointTransforms.Append(effect.transform.GetChild(1));
+
+            //var tracer = effect.AddComponent<Tracer>();
+            //tracer.startTransform = effect.transform.GetChild(2);
+
+            //tracer.headTransform = effect.transform.GetChild(0);
+            //tracer.tailTransform = effect.transform.GetChild(1);
+
+            //tracer.length = length;
+            //tracer.speed = speed;
+
+            //tracer.onTailReachedDestination = new UnityEngine.Events.UnityEvent();
+
+            //tracer.onTailReachedDestination.AddListener(delegate{
+            //    functions.UnparentTransform(effect.transform.GetChild(1).GetChild(0));
+            //    Log.Debug("It happened");
+            //});
+            return effect;
         }
 
         private static void CreateUI()
@@ -69,9 +138,27 @@ namespace RobomandoMod.Survivors.Robomando
             }
 
             objCurve.overallCurve = curve;
+
+            hackIndicatorRed = _assetBundle.LoadAsset<GameObject>("RobomandoHackingIndicatorRed");
+            ObjectScaleCurve objCurveRed = hackIndicatorRed.transform.GetChild(0).gameObject.AddComponent<ObjectScaleCurve>();
+            objCurveRed.timeMax = 0.1f;
+            objCurveRed.useOverallCurveOnly = true;
+            objCurveRed.resetOnAwake = true;
+            curve = objCurveRed.overallCurve;
+            curve = new AnimationCurve(frames);
+            for (int i = 0; i < curve.length; i++)
+            {
+                curve.SmoothTangents(i, 0);
+            }
+
+            objCurveRed.overallCurve = curve;
             if (hackIndicator == null)
             {
                 Debug.LogWarning("HackIndicator is missing!");
+            }
+            if (hackIndicatorRed == null)
+            {
+                Debug.LogWarning("HackIndicatorRed is missing!");
             }
         }
 
@@ -116,6 +203,7 @@ namespace RobomandoMod.Survivors.Robomando
             //remove their ProjectileImpactExplosion component and start from default values
             UnityEngine.Object.Destroy(projectileBouncyBomb.GetComponent<ProjectileImpactExplosion>());
             projectileBouncyBomb.GetComponent<ProjectileSimple>().lifetime = 99f;
+            projectileBouncyBomb.GetComponent<ProjectileDamage>().damageType.damageSource = DamageSource.Secondary;
             ProjectileImpactExplosion bombImpactExplosion = projectileBouncyBomb.AddComponent<ProjectileImpactExplosion>();
             
             bombImpactExplosion.blastRadius = 8f;

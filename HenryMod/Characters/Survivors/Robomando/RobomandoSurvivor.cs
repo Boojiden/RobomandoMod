@@ -1,17 +1,26 @@
 ﻿using BepInEx.Configuration;
 using HenryMod.Characters.Survivors.Robomando.Content;
+using Mono.CompilerServices.SymbolWriter;
+using On.RoR2.UI;
 using RiskOfOptions;
 using RobomandoMod.Characters.Survivors.Robomando.Components;
 using RobomandoMod.Characters.Survivors.Robomando.Content;
+using RobomandoMod.Characters.Survivors.Robomando.Test;
 using RobomandoMod.Modules;
 using RobomandoMod.Modules.Characters;
 using RobomandoMod.Survivors.Robomando.Components;
 using RobomandoMod.Survivors.Robomando.SkillStates;
 using RoR2;
 using RoR2.Skills;
+using RoR2BepInExPack.GameAssetPaths;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.Rendering;
+using static Rewired.InputMapper;
 
 namespace RobomandoMod.Survivors.Robomando
 {
@@ -34,6 +43,8 @@ namespace RobomandoMod.Survivors.Robomando
 
         public static Transform gunTransform;
 
+        public static AssetBundle VFXBundle;
+
         //used when registering your survivor's language tokens
         public override string survivorTokenPrefix => ROBO_PREFIX;
         
@@ -49,6 +60,7 @@ namespace RobomandoMod.Survivors.Robomando
 
             crosshair = Asset.LoadCrosshair("Standard"),
             podPrefab = LegacyResourcesAPI.Load<GameObject>("Prefabs/NetworkedObjects/SurvivorPod"),
+            
 
             maxHealth = 75f,
             healthRegen = 1.5f,
@@ -69,7 +81,7 @@ namespace RobomandoMod.Survivors.Robomando
             new CustomRendererInfo
             {
                 childName = "Gun",
-                material = assetBundle.LoadMaterial("GunMaterial"),
+                //material = assetBundle.LoadMaterial("GunMaterial"),
             },
             new CustomRendererInfo
             {
@@ -133,7 +145,8 @@ namespace RobomandoMod.Survivors.Robomando
             RobomandoStates.Init();
             RobomandoTokens.Init();
 
-            RobomandoAssets.Init(assetBundle);
+            var vfxbundle = Asset.LoadAssetBundle("robomandovfxassets");
+            RobomandoAssets.Init(assetBundle, vfxbundle);
             RobomandoBuffs.Init(assetBundle);
 
             InitializeEntityStateMachines();
@@ -145,7 +158,7 @@ namespace RobomandoMod.Survivors.Robomando
 
             AddHooks();
 
-            gunTransform = characterModelObject.GetComponent<ChildLocator>().FindChild("Gun");
+            //gunTransform = characterModelObject.GetComponent<ChildLocator>().FindChild("Gun");
         }
 
         protected override void InitializeDisplayPrefab()
@@ -162,7 +175,7 @@ namespace RobomandoMod.Survivors.Robomando
             bodyPrefab.AddComponent<HackIndicatorScan>().Init();
             var Locator = prefabCharacterModel.GetComponent<ChildLocator>();
 
-            gunTransform = Locator.FindChild("Gun");
+            //gunTransform = Locator.FindChild("Gun");
 
             var test = Locator.gameObject;
 
@@ -178,6 +191,8 @@ namespace RobomandoMod.Survivors.Robomando
 
             dBone2.m_Root = antenna2.transform.GetChild(1).GetChild(0);
             dBone2.m_Exclusions = new List<Transform>() { dBone2.m_Root.GetChild(0).GetChild(0)};
+
+            bodyPrefab.AddComponent<RobomandoCinematicVoiceLines>().system = Locator.FindChild("VoiceEffect").GetComponent<ParticleSystem>();
             //bodyPrefab.AddComponent<HuntressTrackerComopnent>();
             //anything else here
         }
@@ -285,7 +300,7 @@ namespace RobomandoMod.Survivors.Robomando
                     "RobomandoShoot",
                     ROBO_PREFIX + "PRIMARY_SHOT_NAME",
                     ROBO_PREFIX + "PRIMARY_SHOT_DESCRIPTION",
-                    assetBundle.LoadAsset<Sprite>("texShootIcon"),
+                    RobomandoConfig.EnableNewIcons.Value ? assetBundle.LoadAsset<Sprite>("texShootIcon2") : assetBundle.LoadAsset<Sprite>("texShootIcon"),
                     new EntityStates.SerializableEntityStateType(typeof(SkillStates.Shoot)),
                     "Weapon",
                     true
@@ -293,7 +308,6 @@ namespace RobomandoMod.Survivors.Robomando
             //custom Skilldefs can have additional fields that you can set manually
             primarySkillDef1.stepCount = 2;
             primarySkillDef1.stepGraceDuration = 0.5f;
-
             Skills.AddPrimarySkills(bodyPrefab, primarySkillDef1);
         }
 
@@ -307,7 +321,7 @@ namespace RobomandoMod.Survivors.Robomando
                 skillName = "RobomandoZap",
                 skillNameToken = ROBO_PREFIX + "SECONDARY_ZAP_NAME",
                 skillDescriptionToken = ROBO_PREFIX + "SECONDARY_ZAP_DESCRIPTION",
-                skillIcon = assetBundle.LoadAsset<Sprite>("texZapIcon"),
+                skillIcon = RobomandoConfig.EnableNewIcons.Value ? assetBundle.LoadAsset<Sprite>("texZapIcon2") : assetBundle.LoadAsset<Sprite>("texZapIcon"),
                 keywordTokens = new string[] { "KEYWORD_AGILE", "KEYWORD_STUNNING" },
                 activationState = new EntityStates.SerializableEntityStateType(typeof(SkillStates.Zap)),
                 activationStateMachineName = "Weapon",
@@ -338,7 +352,7 @@ namespace RobomandoMod.Survivors.Robomando
                 skillName = "RobomandoBomb",
                 skillNameToken = ROBO_PREFIX + "SECONDARY_BOMB_NAME",
                 skillDescriptionToken = ROBO_PREFIX + "SECONDARY_BOMB_DESCRIPTION",
-                skillIcon = assetBundle.LoadAsset<Sprite>("texBombIcon"),
+                skillIcon = RobomandoConfig.EnableNewIcons.Value ? assetBundle.LoadAsset<Sprite>("texBombIcon2") : assetBundle.LoadAsset<Sprite>("texBombIcon"),
                 keywordTokens = new string[] {},
                 activationState = new EntityStates.SerializableEntityStateType(typeof(SkillStates.BouncyBomb)),
                 activationStateMachineName = "LeftArm",
@@ -377,7 +391,7 @@ namespace RobomandoMod.Survivors.Robomando
                 skillName = "RobomandoRoll",
                 skillNameToken = ROBO_PREFIX + "UTILITY_ROLL_NAME",
                 skillDescriptionToken = ROBO_PREFIX + "UTILITY_ROLL_DESCRIPTION",
-                skillIcon = assetBundle.LoadAsset<Sprite>("texRollIcon"),
+                skillIcon = RobomandoConfig.EnableNewIcons.Value ? assetBundle.LoadAsset<Sprite>("texRollIcon2") : assetBundle.LoadAsset<Sprite>("texRollIcon"),
 
                 activationState = new EntityStates.SerializableEntityStateType(typeof(Roll)),
                 activationStateMachineName = "Body",
@@ -416,7 +430,7 @@ namespace RobomandoMod.Survivors.Robomando
                 skillNameToken = ROBO_PREFIX + "SPECIAL_HACK_NAME",
                 skillDescriptionToken = ROBO_PREFIX + "SPECIAL_HACK_DESCRIPTION",
                 keywordTokens = new string[] { survivorTokenPrefix + "KEYWORD_JURY_RIG" },
-                skillIcon = assetBundle.LoadAsset<Sprite>("texHackIcon"),
+                skillIcon = RobomandoConfig.EnableNewIcons.Value ? assetBundle.LoadAsset<Sprite>("texHackIcon2") : assetBundle.LoadAsset<Sprite>("texHackIcon"),
 
                 activationState = new EntityStates.SerializableEntityStateType(typeof(SkillStates.Hack)),
                 //setting this to the "weapon2" EntityStateMachine allows us to cast this skill at the same time primary, which is set to the "weapon" EntityStateMachine
@@ -429,7 +443,31 @@ namespace RobomandoMod.Survivors.Robomando
                 cancelSprintingOnActivation = false,
             }) ;
 
+            SkillDef specialSkillDef2 = Skills.CreateSkillDef(new SkillDefInfo
+            {
+                skillName = "RobomandoOverwire",
+                skillNameToken = ROBO_PREFIX + "SPECIAL_OVERWIRE_NAME",
+                skillDescriptionToken = ROBO_PREFIX + "SPECIAL_OVERWIRE_DESCRIPTION",
+                keywordTokens = new string[] { survivorTokenPrefix + "KEYWORD_JURY_RIG" },
+                skillIcon = assetBundle.LoadAsset<Sprite>("texOverwireIcon"),
+
+                activationState = new EntityStates.SerializableEntityStateType(typeof(Overwire)),
+                //setting this to the "weapon2" EntityStateMachine allows us to cast this skill at the same time primary, which is set to the "weapon" EntityStateMachine
+                activationStateMachineName = "Body",
+                interruptPriority = EntityStates.InterruptPriority.Skill,
+
+                baseMaxStock = 1,
+                baseRechargeInterval = 8f,
+                beginSkillCooldownOnSkillEnd = true,
+                mustKeyPress = false,
+                cancelSprintingOnActivation = false,
+            });
+
             Skills.AddSpecialSkills(bodyPrefab, specialSkillDef1);
+            if (RobomandoPlugin.scepterInstalled)
+            {
+                RobomandoScepterIntegration.Init(this, bodyPrefab.GetComponent<SkillLocator>().special.skillFamily, specialSkillDef2);
+            }
         }
         #endregion skills
         
@@ -599,6 +637,9 @@ namespace RobomandoMod.Survivors.Robomando
             #endregion
 
             skinController.skins = skins.ToArray();
+
+            var skinControllerNew = displayPrefab.AddComponent<ModelSkinController>();
+            skinControllerNew.skins = skins.ToArray();
         }
         #endregion skins
 
@@ -620,12 +661,210 @@ namespace RobomandoMod.Survivors.Robomando
         private void AddHooks()
         {
             R2API.RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
-            RoR2.GlobalEventManager.onCharacterDeathGlobal += PlayFunnyDeathSounds;
+            GlobalEventManager.onCharacterDeathGlobal += PlayFunnyDeathSounds;
+
+            On.RoR2.CharacterMaster.OnServerStageBegin += CharacterMaster_OnServerStageBegin;
+
+            TeleporterInteraction.onTeleporterBeginChargingGlobal += (inter) =>
+            {
+                foreach(var user in LocalUserManager.readOnlyLocalUsersList)
+                {
+                    var localBody = user.cachedBody;
+                    if ((bool)localBody)
+                    {
+                        RobomandoCinematicVoiceLines.PlayRoboVoice(localBody.gameObject, "Play_Robo_Voice_Boss_Spawned");
+                    }
+                }
+            };
+
+            GlobalEventManager.onCharacterDeathGlobal += (message) =>
+            {
+                if (!message.victimBody)
+                {
+                    return;
+                }
+                var body = message.victimBody;
+                RobomandoCinematicVoiceLines.PlayRoboVoice(body.gameObject, "Play_Robo_Voice_Die"); //if robomando dies
+                foreach(var user in LocalUserManager.readOnlyLocalUsersList)
+                {
+                    var localCharBody = user.cachedBody;
+                    if (message.victimIsBoss && message.attackerBody.Equals(localCharBody))
+                    {
+                        if(body.TryGetComponent<CharacterDeathBehavior>(out var death) && death.deathState.typeName.Equals("EntityStates.BrotherMonster.TrueDeathState"))
+                        {
+                            RobomandoCinematicVoiceLines.PlayRoboVoice(localCharBody.gameObject, "Play_Robo_Voice_Mithrix_Killed");
+                        }
+                        else
+                        {
+                            RobomandoCinematicVoiceLines.PlayRoboVoice(localCharBody.gameObject, "Play_Robo_Voice_Boss_Killed");
+                        } 
+                    }
+                    if(message.victimTeamIndex == localCharBody.teamComponent.teamIndex)
+                    {
+                        RobomandoCinematicVoiceLines.PlayRoboVoice(localCharBody.gameObject, "Play_Robo_Voice_Ally_Dead");
+                    }
+                }
+            };
+
+            GlobalEventManager.onClientDamageNotified += (message) =>
+            {
+                if(!(message.victim && message.victim.TryGetComponent<CharacterBody>(out var body)))
+                {
+                    return;
+                }
+                if (message.hitLowHealth)
+                {
+                    //method will check if obj is robomando or not
+                    RobomandoCinematicVoiceLines.PlayRoboVoice(message.victim, "Play_Robo_Voice_Low_Health");
+                    //only local players have body components
+                    foreach(var user in LocalUserManager.readOnlyLocalUsersList)
+                    {
+                        var localCharBody = user.cachedBody;
+                        if (localCharBody)
+                        {
+                            if(body.teamComponent.teamIndex == localCharBody.teamComponent.teamIndex)
+                            {
+                                RobomandoCinematicVoiceLines.PlayRoboVoice(localCharBody.gameObject, "Play_Robo_Voice_Ally_Danger");
+                            }
+                        }
+                    }
+                }
+            };
+
+            GlobalEventManager.OnInteractionsGlobal += (interactor, i_interactable, obj) =>
+            {
+                if (!interactor.TryGetComponent<CharacterBody>(out var body))
+                {
+                    return;
+                }
+                if (obj.TryGetComponent<ChestBehavior>(out var behaviour))
+                {
+                    RobomandoCinematicVoiceLines.PlayRoboVoice(body.gameObject, "Play_Robo_Voice_Chest_Open");
+                }
+            };
+
+            EquipmentSlot.onServerEquipmentActivated += (slot, index) =>
+            {
+                RobomandoCinematicVoiceLines.PlayRoboVoice(slot.gameObject, "Play_Robo_Voice_Use_Equip");
+            };
+
+            On.RoR2.DirectorCore.TrySpawnObject += DirectorCore_TrySpawnObject;
+            
+            //RoR2Application.onLoadFinished += LogEvents.PrintSceneNames;
+
+            ObjectivePanelController.ObjectiveTracker.OnRetired += ObjectiveTracker_OnRetired;
+
+            On.RoR2.LunarCoinDef.GrantPickup += LunarCoinDef_GrantPickup;
 
             if(RobomandoPlugin.emotesInstalled)
             {
                 Debug.Log("Call AddSkeleton from survivor script");
                 RobomandoAddEmoteSkeleton.AddSkeleton(assetBundle);
+            }
+            if (RobomandoPlugin.qualityInstalled)
+            {
+                RobomandoQualityIntegration.Init();
+            }
+        }
+
+        private GameObject DirectorCore_TrySpawnObject(On.RoR2.DirectorCore.orig_TrySpawnObject orig, DirectorCore self, DirectorSpawnRequest directorSpawnRequest)
+        {
+            var result = orig(self, directorSpawnRequest);
+            if (!(bool)result)
+            {
+                return result;
+            }
+            if(directorSpawnRequest != null && (bool)directorSpawnRequest.spawnCard && (bool)directorSpawnRequest.spawnCard.prefab)
+            {
+                var prefab = directorSpawnRequest.spawnCard.prefab;
+                if(!prefab.TryGetComponent<CharacterMaster>(out CharacterMaster master))
+                {
+                    //Log.Debug("[VoiceHook]: No Master");
+                    return result;
+                }
+                var spawnedIndex = BodyCatalog.FindBodyIndex(master.bodyPrefab);
+                if (spawnedIndex.Equals(BodyCatalog.FindBodyIndex(RoR2Content.BodyPrefabs.BrotherBody)))
+                {
+                    foreach(var user in LocalUserManager.readOnlyLocalUsersList)
+                    {
+                        var localbody = user.cachedBody;
+                        if (localbody != null)
+                        {
+                            RobomandoCinematicVoiceLines.PlayRoboVoice(localbody.gameObject, "Play_Robo_Voice_Mithrix_Spawn");
+                        }
+                    }
+                }
+                else
+                {
+                    //Log.Debug("[VoiceHook]: Not Mithrix");
+                }
+            }
+            else
+            {
+                //Log.Debug("[VoiceHook]: No prefab spawn");
+            }
+            return result;
+        }
+
+        private void LunarCoinDef_GrantPickup(On.RoR2.LunarCoinDef.orig_GrantPickup orig, LunarCoinDef self, ref PickupDef.GrantContext context)
+        {
+            orig(self,ref context);
+            if (context.body)
+            {
+                RobomandoCinematicVoiceLines.PlayRoboVoice(context.body.gameObject, "Play_Robo_Voice_Lunar_Coin");
+            }
+        }
+
+        private void ObjectiveTracker_OnRetired(ObjectivePanelController.ObjectiveTracker.orig_OnRetired orig, RoR2.UI.ObjectivePanelController.ObjectiveTracker self)
+        {
+            orig(self);
+            if (self is RoR2.UI.ObjectivePanelController.FindTeleporterObjectiveTracker ||
+                self is RoR2.UI.ObjectivePanelController.ActivateGoldshoreBeaconTracker)
+            {
+                return;
+            }
+            if ((bool)self.owner && (bool)self.owner.currentMaster && (bool)self.owner.currentMaster.bodyInstanceObject)
+            {
+                RobomandoCinematicVoiceLines.PlayRoboVoice(self.owner.currentMaster.bodyInstanceObject, "Play_Robo_Voice_Objective");
+            }
+        }
+
+        private void CharacterMaster_OnServerStageBegin(On.RoR2.CharacterMaster.orig_OnServerStageBegin orig, CharacterMaster self, Stage stage)
+        {
+            orig(self, stage);
+            if((bool)self.bodyPrefab && self.bodyPrefab.Equals(bodyPrefab))
+            {
+                self.StartCoroutine(WaitForPlayerInstantiation(3f, stage));
+            }
+            
+        }
+
+        private IEnumerator WaitForPlayerInstantiation(float duration, Stage stage)
+        {
+            yield return new WaitForSeconds(duration);
+            foreach (var user in LocalUserManager.readOnlyLocalUsersList)
+            {
+                var localBody = user.cachedBody;
+                if ((bool)localBody)
+                {
+
+                    if (stage.sceneDef.sceneDefIndex.Equals(SceneCatalog.FindSceneIndex("moon2")))
+                    {
+                        RobomandoCinematicVoiceLines.PlayRoboVoice(localBody.gameObject, "Play_Robo_Voice_Spawn_Moon");
+                        yield break;
+                    }
+                    
+
+                    var rng = new Xoroshiro128Plus(Run.instance.runRNG.nextUint);
+                    if (rng.nextBool)
+                    {
+                        RobomandoCinematicVoiceLines.PlayRoboVoice(localBody.gameObject, "Play_Robo_Voice_Spawn_Stage");
+                    }
+                    else
+                    {
+                        RobomandoCinematicVoiceLines.PlayRoboVoice(localBody.gameObject, "Play_Robo_Voice_Spawn_Party");
+                    }
+                }
             }
         }
 
@@ -633,15 +872,22 @@ namespace RobomandoMod.Survivors.Robomando
         {
             //report.victimBody.baseNameToken
             //RoR2.Chat.SendBroadcastChat(new RoR2.Chat.SimpleChatMessage() { baseToken = $"<style=cEvent><color=#307FFF>Victim Name: {report.victimBody.baseNameToken}</color></style>" });
-            if (report.victimBody.baseNameToken.Equals("RAT_ROBOMANDO_NAME"))
+            if (report.victimBody)
             {
-                Util.PlaySound("LegoDeathSound", report.victimBody.gameObject);
-                if (!RobomandoConfig.RoboTalks.Value)
+                if (report.victimBody.gameObject != null)
                 {
-                    //Util.PlaySound("DeathVoice", report.victimBody.gameObject);
-                    TryPlayVoiceLine("DeathVoice", report.victimBody.gameObject);
+                    var name = report.victimBody.baseNameToken;
+                    if (name != null && name.Equals("RAT_ROBOMANDO_NAME"))
+                    {
+                        Util.PlaySound("Play_Robo_Lego_Death_Sound", report.victimBody.gameObject);
+                        if (!RobomandoConfig.RoboTalks.Value)
+                        {
+                            //Util.PlaySound("DeathVoice", report.victimBody.gameObject);
+                            TryPlayVoiceLine("Play_Robo_Death_Gasp", report.victimBody.gameObject);
+                        }
+
+                    }
                 }
-                    
             }
         }
 

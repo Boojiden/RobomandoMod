@@ -2,15 +2,14 @@
 using System.Globalization;
 using BepInEx;
 using System.IO;
+using Path = System.IO.Path;
 using Newtonsoft.Json.Utilities;
-using R2API;
 using RobomandoMod.Modules;
 using RobomandoMod.Survivors.Robomando.Achievements;
 using RoR2;
 using System.Collections.Generic;
-using HG;
 using Newtonsoft.Json;
-using UnityEngine.Rendering;
+using RobomandoMod.Survivors.Robomando.SkillStates;
 
 namespace RobomandoMod.Survivors.Robomando
 {
@@ -20,11 +19,15 @@ namespace RobomandoMod.Survivors.Robomando
 
         public static Dictionary<string, Dictionary<string, string>> DynamicTextDict;
 
+        private static bool initialized = false;
+
         public static readonly string[] dynamicTokens = new string[] { 
             RobomandoSurvivor.ROBO_PREFIX + "PRIMARY_SHOT_DESCRIPTION", 
             RobomandoSurvivor.ROBO_PREFIX + "SECONDARY_ZAP_DESCRIPTION", 
-            RobomandoSurvivor.ROBO_PREFIX + "SECONDARY_BOMB_DESCRIPTION" 
+            RobomandoSurvivor.ROBO_PREFIX + "SECONDARY_BOMB_DESCRIPTION",
+            RobomandoSurvivor.ROBO_PREFIX + "SPECIAL_OVERWIRE_DESCRIPTION"
         };
+
         public static void Init()
         {
             //AddRobomandoTokens();
@@ -36,43 +39,73 @@ namespace RobomandoMod.Survivors.Robomando
             ///
             GetDynamicTextDict();
 
+            initialized = true;
+
             ChangeSingleShotText();
             ChangeZapText();
             ChangeBombText();
+            ChangeOverwireText();
 
             Language.onCurrentLanguageChanged += ChangeSingleShotText;
             Language.onCurrentLanguageChanged += ChangeZapText;
             Language.onCurrentLanguageChanged += ChangeBombText;
+            Language.onCurrentLanguageChanged += ChangeOverwireText;
         }
 
         public static void GetDynamicTextDict()
         {
             DynamicTextDict = new Dictionary<string, Dictionary<string, string>>();
 
-            string file = Directory.GetFiles(Paths.PluginPath, "*.language", SearchOption.AllDirectories)[0];
-            string fileText = File.ReadAllText(file);
+            //string file = Directory.GetFiles(, "*.language", SearchOption.AllDirectories)[0];
+            string path = "";
+            string fileText = "";
+            try
+            {
+                path = Path.Combine(Path.GetDirectoryName(RobomandoPlugin.instance.Info.Location), "RobomandoLangFiles.language");
+                fileText = File.ReadAllText(path);
+                //Log.Debug(fileText);
+            }
+            catch (FileNotFoundException fileE)
+            {
+                Log.Warning("Cannot find langauge file");
+            }
+            catch (Exception e)
+            {
+                Log.Error("Encountered an error trying to read language file. Stack trace: " + e.StackTrace);
+            }
 
-            
+            if(fileText.Equals(""))
+            {
+                return;
+            }
+
             var dict = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(fileText);
 
             foreach (string key in dict.Keys)
             {
-                var savedKey = key;
+                var langKey = key;
                 if (key.Equals("strings"))
                 {
-                    savedKey = "default";
+                    langKey = "default";
+                }
+                if (!dict.ContainsKey(key))
+                {
+                    continue;
                 }
                 var innerDict = dict[key];
                 foreach(var token in dynamicTokens)
                 {
                     Dictionary<string, string> langDict;
-                    if (!DynamicTextDict.ContainsKey(savedKey))
+                    if (!DynamicTextDict.ContainsKey(langKey))
                     {
-                        DynamicTextDict.Add(savedKey, new Dictionary<string, string>());
+                        DynamicTextDict.Add(langKey, new Dictionary<string, string>());
                     }
-                    langDict = DynamicTextDict[savedKey];
+                    langDict = DynamicTextDict[langKey];
 
-                    langDict.Add(token, innerDict[token]);
+                    if (innerDict.ContainsKey(token))
+                    {
+                        langDict.Add(token, innerDict[token]);
+                    }
                 }
             }
         }
@@ -104,12 +137,33 @@ namespace RobomandoMod.Survivors.Robomando
             SetNewAbilityToken(RobomandoSurvivor.ROBO_PREFIX + "SECONDARY_BOMB_DESCRIPTION", RobomandoStaticValues.bouncyBombDamageCoefficient * 100f);
         }
 
+        public static void ChangeOverwireText()
+        {
+            SetNewAbilityToken(RobomandoSurvivor.ROBO_PREFIX + "SPECIAL_OVERWIRE_DESCRIPTION", Overwire.doubleChance * 100f);
+        }
+
         private static void SetNewAbilityToken(string token, object param)
         {
+            if(!initialized)
+            {
+                return;
+            }
             string lang = Language.currentLanguageName;
             if (!DynamicTextDict.ContainsKey(lang))
             {
                 lang = "default";
+            }
+
+            if (!DynamicTextDict.ContainsKey(lang))
+            {
+                Log.Warning("No specified value for language {0}".FormatWith(null, lang));
+                return;
+            }
+            var inner = DynamicTextDict[lang];
+            if(!inner.ContainsKey(token))
+            {
+                Log.Warning("Cannot locate language key {0}".FormatWith(null, token));
+                return;
             }
             string localString = DynamicTextDict[lang][token];
             if (localString != null)
@@ -175,10 +229,13 @@ namespace RobomandoMod.Survivors.Robomando
             ModLanguage.Add(prefix + "UTILITY_ROLL_NAME", "Evasive Maneuver");
             ModLanguage.Add(prefix + "UTILITY_ROLL_DESCRIPTION", "Attempt to roll a short distance. <style=cIsUtility>You cannot be hit during the beginning of the roll.</style>");
             #endregion
-
+                        
             #region Special
             ModLanguage.Add(prefix + "SPECIAL_HACK_NAME", "Re-Wire");
             ModLanguage.Add(prefix + "SPECIAL_HACK_DESCRIPTION", $"<style=cLunarObjective>Jury-Rig. </style>Re-wire a nearby mechanical object, <style=cIsUtility>activating it for free.</style>");
+
+            ModLanguage.Add(prefix + "SPECIAL_OVERWIRE_NAME", "Over-Wire");
+            ModLanguage.Add(prefix + "SPECIAL_OVERWIRE_DESCRIPTION", $"<style=cLunarObjective>Jury-Rig. </style>Re-wire a nearby mechanical object, <style=cIsUtility>activating it for free</style> with a<style=cIsUtility> {(Overwire.doubleChance * 100f).ToString("#")}%</style> chance for <style=cIsUtility>enhanced output.</style>");
             #endregion
 
             #region Achievements

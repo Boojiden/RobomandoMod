@@ -140,6 +140,7 @@ namespace RobomandoMod.Modules
         private static void SetupCharacterBody(GameObject newBodyPrefab, BodyInfo bodyInfo)
         {
             CharacterBody bodyComponent = newBodyPrefab.GetComponent<CharacterBody>();
+
             //identity
             bodyComponent.baseNameToken = bodyInfo.bodyNameToken;
             bodyComponent.subtitleNameToken = bodyInfo.subtitleNameToken;
@@ -210,6 +211,8 @@ namespace RobomandoMod.Modules
             bodyComponent.rootMotionInMainState = false;
 
             bodyComponent.hullClassification = HullClassification.Human;
+
+            bodyComponent.vehicleIdleStateMachine = new EntityStateMachine[0];
 
             bodyComponent.isChampion = false;
         }
@@ -308,7 +311,7 @@ namespace RobomandoMod.Modules
             characterModel.body = bodyPrefab.GetComponent<CharacterBody>();
 
             characterModel.autoPopulateLightInfos = true;
-            characterModel.invisibilityCount = 0;
+            characterModel._invisibilityCount = 0;
             characterModel.temporaryOverlays = new List<TemporaryOverlayInstance>();
 
             if (!preattached)

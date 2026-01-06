@@ -18,6 +18,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             baseDelayBeforeFiringProjectile = 0f;
             damageCoefficient = RobomandoStaticValues.bouncyBombDamageCoefficient;
             force = 60f;
+            
 
             recoilAmplitude = 0.1f;
             bloom = 10;

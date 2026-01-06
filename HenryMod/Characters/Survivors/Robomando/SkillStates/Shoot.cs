@@ -17,8 +17,9 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
         public static float force = 100f;
         public static float recoil = 1.2f;
         public static float range = 256f;
-        public static GameObject tracerEffectPrefab = LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/Tracers/TracerGoldGat");
-        public static GameObject fireFX = EntityStates.Commando.CommandoWeapon.FireBarrage.effectPrefab;
+        public static GameObject tracerEffectPrefab = RobomandoAssets.gunTracerEffect;
+        public static GameObject fireFX = RobomandoAssets.gunMuzzleFlashEffect;
+        public static GameObject impactFX = RobomandoAssets.gunImpactEffect;
 
         private float duration;
         private float fireTime;
@@ -64,15 +65,15 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 hasFired = true;
 
                 characterBody.AddSpreadBloom(1.5f);
-                EffectManager.SimpleMuzzleFlash(EntityStates.Commando.CommandoWeapon.FirePistol2.muzzleEffectPrefab, gameObject, muzzleString, false);
-                Util.PlaySound("Shoot", gameObject);
+                EffectManager.SimpleMuzzleFlash(fireFX, gameObject, muzzleString, false);
+                Util.PlaySound("Play_Robo_Shoot", gameObject);
 
                 if (isAuthority)
                 {
                     Ray aimRay = GetAimRay();
                     AddRecoil(-1f * recoil, -2f * recoil, -0.5f * recoil, 0.5f * recoil);
 
-                    new BulletAttack
+                    var bullet = new BulletAttack
                     {
                         bulletCount = 1,
                         aimVector = aimRay.direction,
@@ -100,8 +101,10 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                         spreadPitchScale = 1f,
                         spreadYawScale = 1f,
                         queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
-                        hitEffectPrefab = EntityStates.Commando.CommandoWeapon.FirePistol2.hitEffectPrefab,
-                    }.Fire();
+                        hitEffectPrefab = impactFX,
+                    };
+                    bullet.damageType.damageSource = DamageSource.Primary;
+                    bullet.Fire();
                 }
             }
         }

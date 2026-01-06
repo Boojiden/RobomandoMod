@@ -119,12 +119,16 @@ namespace RobomandoMod.Modules
             newEffect.AddComponent<DestroyOnTimer>().duration = 12;
             newEffect.AddComponent<NetworkIdentity>();
             newEffect.AddComponent<VFXAttributes>().vfxPriority = VFXAttributes.VFXPriority.Always;
-            EffectComponent effect = newEffect.AddComponent<EffectComponent>();
-            effect.applyScale = false;
-            effect.effectIndex = EffectIndex.Invalid;
-            effect.parentToReferencedTransform = parentToTransform;
-            effect.positionAtReferencedTransform = true;
-            effect.soundName = soundName;
+
+            if(!newEffect.TryGetComponent<EffectComponent>(out EffectComponent comp))
+            {
+                EffectComponent effect = newEffect.AddComponent<EffectComponent>();
+                effect.applyScale = false;
+                //effect.effectIndex = EffectIndex.Invalid;
+                effect.parentToReferencedTransform = parentToTransform;
+                effect.positionAtReferencedTransform = true;
+                effect.soundName = soundName;
+            }
 
             Modules.Content.CreateAndAddEffectDef(newEffect);
 

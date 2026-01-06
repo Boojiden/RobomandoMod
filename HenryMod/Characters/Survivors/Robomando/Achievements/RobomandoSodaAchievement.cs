@@ -27,6 +27,7 @@ namespace RobomandoMod.Survivors.Robomando.Achievements
             {
                 base.OnInstall();
                 Hack.onRobomandoHackGlobal += OnHack;
+                Overwire.onRobomandoHackGlobal += OnHack;
             }
 
             private void OnHack(GameObject robo, GameObject device)

@@ -1,6 +1,8 @@
 ﻿using EntityStates;
 using R2API.Networking;
 using R2API.Networking.Interfaces;
+using RobomandoMod.Characters.Survivors.Robomando.Components;
+using RobomandoMod.Characters.Survivors.Robomando.Content;
 using RoR2;
 using System;
 using UnityEngine;
@@ -27,15 +29,17 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
         public const float baseSoundDuration = 2.2f;
 
         private bool playedSound = false;
-        public static GameObject fireFX = EntityStates.Commando.CommandoWeapon.FireLightsOut.effectPrefab;
+        public static GameObject fireFX = RobomandoAssets.zapMuzzleFlashEffect;
         //RoR2/Base/Lightning/LightningStrikeImpact.prefab 
-        public static GameObject impactFX = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Lightning/LightningStrikeImpact.prefab").WaitForCompletion();
+        public static GameObject impactFX = RobomandoAssets.hackEffect;
         public static GameObject printerDestroyFX = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/StickyBomb/BehemothVFX.prefab").WaitForCompletion();
         public static GameObject printerDestroyFX2 = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Toolbot/CryoCanisterExplosionPrimary.prefab").WaitForCompletion();
         public static event Action<GameObject, GameObject> onRobomandoHackGlobal;
-        //delays for projectiles feel absolute ass so only do this if you know what you're doing, otherwise it's best to keep it at 0
 
         private PrinterItemType type = PrinterItemType.NONE;
+
+        private bool isQualityPrinter = false;
+
         private bool animShouldPlay = false;
         private bool playedOnClient = false;
         private PurchaseInteraction pInter = null;
@@ -81,7 +85,10 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
         public override void OnEnter()
         {
             base.OnEnter();
-            animShouldPlay = false;
+            if (isAuthority)
+            {
+                animShouldPlay = false;
+            }
             RoR2.InteractionDriver IDRobomando = null;
             if (gameObject.TryGetComponent<RoR2.InteractionDriver>(out IDRobomando))
             {
@@ -95,6 +102,15 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                         if (CanHack(interactable))
                         {
                             pInteraction = interactable.GetComponent<RoR2.PurchaseInteraction>();
+
+                            if (RobomandoPlugin.qualityInstalled)
+                            {
+                                if (RobomandoQualityIntegration.IsQualityPrinter(interactable))
+                                {
+                                    isQualityPrinter = true;
+                                }
+                            }
+
                             SetPrinterItemType(pInteraction);
                             pInter = pInteraction;
                             RobomandoSurvivor.TryPlayVoiceLine("UnlockingVoice1", gameObject);
@@ -164,22 +180,25 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 PlayAnimation(GetAnimSpeedHack());
                 playedOnClient = true;
             }
-            if (animShouldPlay && fixedAge > GetSoundSpeed() && !playedSound && isAuthority) 
-            {
-                Util.PlaySound("Tazer", gameObject);
-                playedSound = true;
-                EffectManager.SpawnEffect(impactFX, new EffectData { origin = pInter.gameObject.transform.position }, true);
-                EffectManager.SimpleMuzzleFlash(EntityStates.Commando.CommandoWeapon.FireRocket.effectPrefab, gameObject, "Muzzle", false);
+            if (animShouldPlay && fixedAge > GetSoundSpeed() && !playedSound && isAuthority)
+            { 
+                var message = new HackNetMessage(characterBody.netId, pInter.netId, type, isQualityPrinter, false);
+                message = ModifyHackMessage(message, characterBody.master);
                 if (NetworkServer.active)
                 {
-                    HackDevice(characterBody.gameObject, pInter.gameObject, type);
+                    HackDevice(characterBody.gameObject, pInter.gameObject, message.type, message.isQualityPrinter, message.procScepter);
                     Log.Debug("Hack Request on Server");
                 }
                 else
                 {
-                    new HackNetMessage(characterBody.netId, pInter.netId, type).Send(NetworkDestination.Server);
+                    message.Send(NetworkDestination.Server);
                     Log.Debug("Hack Request on Client");
                 }
+                //Util.PlaySound("Play_Robo_Tazer", gameObject);
+                Util.PlaySound("Play_Robo_Hack", gameObject);
+                playedSound = true;
+                EffectManager.SpawnEffect(ModifyHackEffect(message), new EffectData { origin = pInter.gameObject.transform.position }, true);
+                EffectManager.SimpleMuzzleFlash(EntityStates.Commando.CommandoWeapon.FireRocket.effectPrefab, gameObject, "Muzzle", false);
             }
             if (animShouldPlay && fixedAge > GetAttackSpeedDuration())
             {
@@ -190,6 +209,16 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 outer.SetNextStateToMain();
                 skillLocator.special.finalRechargeInterval = RobomandoStaticValues.unsuccessfullHackCooldown;
             }
+        }
+
+        public virtual HackNetMessage ModifyHackMessage(HackNetMessage message, CharacterMaster master)
+        {
+            return message;
+        }
+
+        public virtual GameObject ModifyHackEffect(HackNetMessage message)
+        {
+            return impactFX;
         }
 
         public override InterruptPriority GetMinimumInterruptPriority()
@@ -216,7 +245,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
         {
             animShouldPlay = reader.ReadBoolean();
         }
-        public static void HackDevice(GameObject robo, GameObject device, PrinterItemType type)
+        public static void HackDevice(GameObject robo, GameObject device, PrinterItemType type, bool isQuality, bool procScepter)
         {
             
             var pInter = device.GetComponent<PurchaseInteraction>();
@@ -224,8 +253,13 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             int originalPrice = pInter.cost;
             pInter.cost = 0;
             onRobomandoHackGlobal?.Invoke(robo, device);
-            if (type == PrinterItemType.NONE)
+            if (type == PrinterItemType.NONE && !isQuality)
             {
+                if (procScepter)
+                {
+                    PreInteractionUpgrade(device);
+                    pInter.onDetailedPurchaseServer.AddListener(UpgradeInteractableOutput);
+                }
                 robo.GetComponent<InteractionDriver>().interactor.CallCmdInteract(device);
                 pInter.cost = originalPrice;
             }
@@ -249,6 +283,10 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                         pickupIndex = PickupCatalog.FindPickupIndex(RoR2Content.Items.ScrapYellow.itemIndex);
                         break;
                 }
+                if (isQuality)
+                {
+                    pickupIndex = RobomandoQualityIntegration.OverwritePrinterIndex(pickupIndex, device, robo, Run.instance.treasureRng);
+                }
                 Vector3 spawnPos = Vector3.zero;
                 var ShopTerminal = device.GetComponent<ShopTerminalBehavior>();
                 Transform pivot = ShopTerminal ? ShopTerminal.dropTransform : null;
@@ -261,16 +299,60 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                     Debug.Log("pivot is null");
                     spawnPos = device.transform.position;
                 }
-
+                UniquePickup pickupInst = new UniquePickup(pickupIndex);
                 NetworkServer.DestroyObject(device);
                 Destroy(device);
-                PickupDropletController.CreatePickupDroplet(pickupIndex, spawnPos, device.transform.rotation * new Vector3(0, 15, 6));
-                
+                PickupDropletController.CreatePickupDroplet(pickupInst, spawnPos, device.transform.rotation * new Vector3(0, 15, 6), false, false);
+                if (procScepter)
+                {
+                    PickupDropletController.CreatePickupDroplet(pickupInst, spawnPos, device.transform.rotation * new Vector3(0, 15, 6), false, false);
+                }
+
                 EffectManager.SpawnEffect(printerDestroyFX, new EffectData { origin = spawnPos }, true);
                 EffectManager.SpawnEffect(printerDestroyFX2, new EffectData { origin = spawnPos }, true);
 
 
                 //AkSoundEngine.PostEvent("Play_item_proc_behemoth", pInter.gameObject);
+            }
+        }
+
+        private static void UpgradeInteractableOutput(CostTypeDef.PayCostContext context, CostTypeDef.PayCostResults results)
+        {
+            var device = context.purchasedObject;
+            if(device.TryGetComponent<ChestBehavior>(out ChestBehavior chest))
+            {
+                chest.dropCount++;
+            }
+            if (device.TryGetComponent<RouletteChestController>(out RouletteChestController rChest))
+            {
+                rChest.dropCount++;
+            }
+            if (device.TryGetComponent<PickupDistributorBehavior>(out PickupDistributorBehavior tShop))
+            {
+                tShop.baseDropAmount += 5;
+            }
+        }
+
+        private static void PreInteractionUpgrade(GameObject device)
+        {
+            if (device.TryGetComponent<SummonMasterBehavior>(out SummonMasterBehavior summon))
+            {
+                if (summon.droneUpgradeCount == 0)
+                {
+                    summon.droneUpgradeCount = 1;
+                }
+            }
+            if (device.TryGetComponent<ShopTerminalBehavior>(out ShopTerminalBehavior shop))
+            {
+                shop.dropAmount++;
+            }
+            if (device.TryGetComponent<RadiotowerTerminal>(out RadiotowerTerminal radio))
+            {
+                NetworkServer.Spawn(GameObject.Instantiate(LegacyResourcesAPI.Load<GameObject>("Prefabs/NetworkedObjects/ChestScanner"), device.transform.position, Quaternion.identity));
+            }
+            if (device.TryGetComponent<VendingMachineBehavior>(out VendingMachineBehavior vending))
+            {
+                vending.healFraction = 0.5f; //25% increase
             }
         }
 
@@ -281,6 +363,13 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 if (device.GetComponent<EntityStateMachine>().mainStateType.typeName == "EntityStates.Duplicator.Duplicating")
                 {
                     return true;
+                }
+                else if (RobomandoPlugin.qualityInstalled)
+                {
+                    if (RobomandoQualityIntegration.IsQualityPrinter(device))
+                    {
+                        return true;
+                    }
                 }
             }
             catch (Exception e)
@@ -298,15 +387,18 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
 
     public class HackNetMessage : INetMessage
     {
-        NetworkInstanceId RoboID;
-        NetworkInstanceId DeviceID;
-        PrinterItemType type;
+        public NetworkInstanceId RoboID;
+        public NetworkInstanceId DeviceID;
+        public PrinterItemType type;
+        public bool isQualityPrinter;
+        public bool procScepter;
 
         public void Deserialize(NetworkReader reader)
         {
             RoboID = reader.ReadNetworkId();
             DeviceID = reader.ReadNetworkId();
             type = (PrinterItemType)reader.ReadByte();
+            isQualityPrinter = reader.ReadBoolean();
         }
 
         public void OnReceived()
@@ -319,7 +411,7 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
                 GameObject device = NetworkServer.FindLocalObject(DeviceID);
 
 
-                Hack.HackDevice(robo, device, type);
+                Hack.HackDevice(robo, device, type, isQualityPrinter, procScepter);
 
                 //device.GetComponent<PurchaseInteraction>().onPurchase.Invoke(robo.GetComponent<InteractionDriver>().interactor);
             }
@@ -330,6 +422,8 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
             writer.Write(RoboID);
             writer.Write(DeviceID);
             writer.Write((byte)type);
+            writer.Write(isQualityPrinter);
+            writer.Write(procScepter);
         }
 
         public HackNetMessage()
@@ -337,11 +431,13 @@ namespace RobomandoMod.Survivors.Robomando.SkillStates
 
         }
 
-        public HackNetMessage(NetworkInstanceId roboID, NetworkInstanceId deviceID, PrinterItemType printerType = PrinterItemType.NONE)
+        public HackNetMessage(NetworkInstanceId roboID, NetworkInstanceId deviceID, PrinterItemType printerType = PrinterItemType.NONE, bool qPrinter = false, bool pScepter = false)
         {
             RoboID = roboID;
             DeviceID = deviceID;
             type = printerType;
+            isQualityPrinter = qPrinter;
+            procScepter = pScepter;
         }
     }
 }

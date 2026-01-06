@@ -18,6 +18,9 @@ namespace RobomandoMod.Characters.Survivors.Robomando.Components
         private Indicator ind;
         private InteractionDriver driver;
 
+        private Color origColor = new Color(163, 255, 248);
+        private Color overwireColor = new Color(255, 69, 69);
+
         public void Start()
         {
             Debug.Log("HackIndicator component present");
@@ -34,7 +37,10 @@ namespace RobomandoMod.Characters.Survivors.Robomando.Components
         public void FixedUpdate()
         {
             //Log.Debug("FixedUpdate");
-            if(robo != null && robo.skillLocator.special.skillDef.skillName.Equals("RobomandoHack"))
+            var name = robo.skillLocator.special.skillDef.skillName;
+            bool nameFlag1 = name.Equals("RobomandoHack");
+            bool nameFlag2 = name.Equals("RobomandoOverwire");
+            if (robo != null && (nameFlag1 || nameFlag2))
             {
                 //Log.Debug("Has Hack");
                 if (robo.skillLocator.special.IsReady())
@@ -52,10 +58,12 @@ namespace RobomandoMod.Characters.Survivors.Robomando.Components
                             //TODO: Multishops put the indicator below where they should
                             //GetComponent<EntityStateMachine>().mainStateType.typeName == "EntityStates.Duplicator.Duplicating"
                             //GetComponent<PurchaseInteraction>().displayNameToken.Equals("MULTISHOP_TERMINAL_NAME")
-                            ind = new Indicator(robo.gameObject.transform.root.gameObject, RobomandoAssets.hackIndicator);
-                            if (driver.currentInteractable.TryGetComponent<ShopTerminalBehavior>(out var shop) && !Hack.IsPrinter(driver.currentInteractable))
+                            ind = new Indicator(robo.gameObject.transform.root.gameObject, nameFlag2 ? RobomandoAssets.hackIndicatorRed : RobomandoAssets.hackIndicator);
+                            bool flag1 = driver.currentInteractable.TryGetComponent<ShopTerminalBehavior>(out var shop);
+                            bool flag2 = driver.currentInteractable.TryGetComponent<DroneVendorTerminalBehavior>(out var droneShop);
+                            if ((flag1 || flag2) && !Hack.IsPrinter(driver.currentInteractable))
                             {
-                                GameObject pickupDisplay = driver.currentInteractable.transform.GetComponentInChildren<PickupDisplay>().gameObject;
+                                GameObject pickupDisplay = flag1 ? shop.pickupDisplay.gameObject : droneShop.pickupDisplay.gameObject;
                                 ind.targetTransform = pickupDisplay.transform;
                             }
                             else
@@ -63,6 +71,12 @@ namespace RobomandoMod.Characters.Survivors.Robomando.Components
                                 ind.targetTransform = driver.currentInteractable.transform;
                             }
                             ind.active = true;
+                            //SpriteRenderer renderer = ind.visualizerInstance.transform.GetChild(0).GetChild(0).GetComponent<SpriteRenderer>();
+                            //renderer.color = origColor;
+                            //if (nameFlag2)
+                            //{
+                            //    renderer.color = overwireColor;
+                            //}
                             cachedInteractable = driver.currentInteractable;
                         }
                         
@@ -71,41 +85,6 @@ namespace RobomandoMod.Characters.Survivors.Robomando.Components
                     {
                         ClearIndicator();
                     }
-                    /*
-                    Log.Debug("Hack is ready");
-                    var hits = Physics.SphereCastAll(robo.gameObject.transform.root.position, searchRadius, robo.gameObject.transform.root.forward, searchRadius, LayerIndex.CommonMasks.interactable, QueryTriggerInteraction.Collide);
-                    Log.Debug("Cast is fine");
-                    foreach(RaycastHit hit in hits)
-                    {
-                        var entity = hit.collider.gameObject.transform.root.GetComponent<EntityLocator>().entity;
-                        if(entity != null)
-                        {
-                            Log.Debug($"CircleCast hit {entity}");
-                            if (Hack.CanHack(entity))
-                            {
-                                Log.Debug($"{entity}Can be Hacked");
-                                HackIndicator indicator;
-                                if (!indicators.TryGetValue(hit.collider.gameObject.transform.root.gameObject, out indicator))
-                                {
-                                    Log.Debug($"Made HackIndicator");
-                                    indicator = new HackIndicator(robo.gameObject.transform.root.gameObject, RobomandoAssets.hackIndicator);
-                                    indicator.targetTransform = robo.gameObject.transform.root;
-                                    indicator.active = true;
-                                }
-                                indicators[hit.collider.gameObject.transform.root.gameObject] = indicator;
-                            }
-                        }
-                    }
-                    Log.Debug("No Items Found");
-                    foreach(var indicator in indicators)
-                    {
-                        if((indicator.Value.targetTransform.position - robo.gameObject.transform.root.position).magnitude > searchRadius)
-                        {
-                            Log.Debug($"Indicator out of range, removing");
-                            RemoveIndicator(indicator.Key);
-                        }
-                    }
-                    */
                 }
                 else
                 {
@@ -131,6 +110,7 @@ namespace RobomandoMod.Characters.Survivors.Robomando.Components
         {
             if(ind != null)
             {
+                ind.active = false;
                 ind.DestroyVisualizer();
                 ind = null;
             }

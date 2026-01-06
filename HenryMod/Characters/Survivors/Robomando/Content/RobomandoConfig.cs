@@ -26,10 +26,12 @@ namespace RobomandoMod.Survivors.Robomando
 
         //public static ConfigEntry<float> ArmorReplacement;
         //public static ConfigEntry<float> SpeedReplacement;
-        //TODO: Finish Config
         //public static ConfigEntry<float> ZapCooldownReplacement;
 
         public static ConfigEntry<bool> RoboTalks;
+        public static ConfigEntry<bool> CinematicMode;
+
+        public static ConfigEntry<bool> EnableNewIcons;
 
         public static ConfigEntry<bool> EnableCommandoSkin;
         public static ConfigEntry<bool> EnableBlueSkin;
@@ -133,6 +135,16 @@ namespace RobomandoMod.Survivors.Robomando
                 true,
                 "Whether or not Robomando will talk.");
             ModSettingsManager.AddOption(new CheckBoxOption(RoboTalks));
+
+            CinematicMode = Config.BindAndOptions(
+                section,
+                "Cinematic Mode",
+                false,
+                "cinema");
+            ModSettingsManager.AddOption(new CheckBoxOption(CinematicMode));
+
+            EnableNewIcons = Config.BindAndOptions("Misc", "Enable New Icons", true, "Whether or not to use the new icon set for Robomando's abilities.", true);
+            ModSettingsManager.AddOption(new CheckBoxOption(EnableNewIcons));
 
             string nonPercentFormatString = "{0:0}";
             string durationFormatString = "{0:0}s";
